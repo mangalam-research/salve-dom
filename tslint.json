@@ -1,0 +1,11 @@
+{
+  "extends": "tslint-config-lddubeau",
+  "rules": {
+    "no-any": [false, "we use any in too many places in this project"],
+    "mocha-no-side-effect-code": [true,
+                                  {
+                                    "ignore": "^(makeTest|testFile)\\(.*"
+                                  }
+    ]
+  }
+}

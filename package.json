@@ -1,0 +1,76 @@
+{
+  "name": "salve-dom",
+  "version": "1.0.0",
+  "description": "A library for validating DOM trees according to a Relax NG schema.",
+  "main": "salve-dom.js",
+  "types": "lib/main.d.ts",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mangalam-research/salve-dom.git"
+  },
+  "keywords": [
+    "RelaxNG",
+    "Relax",
+    "NG",
+    "rng",
+    "XML",
+    "validation",
+    "DOM"
+  ],
+  "author": "Louis-Dominique Dubeau <ldd@lddubeau.com>",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/mangalam-research/salve-dom/issues"
+  },
+  "homepage": "https://github.com/mangalam-research/salve-dom#readme",
+  "devDependencies": {
+    "@types/argparse": "^1.0.30",
+    "@types/bluebird": "^3.0.37",
+    "@types/chai": "^3.4.35",
+    "@types/del": "^2.2.32",
+    "@types/event-stream": "^3.3.30",
+    "@types/fs-extra": "0.0.37",
+    "@types/gulp-help": "0.0.32",
+    "@types/gulp-newer": "0.0.29",
+    "@types/gulp-sourcemaps": "0.0.29",
+    "@types/gulp-util": "^3.0.30",
+    "@types/jsdom": "^2.0.30",
+    "@types/mocha": "^2.2.39",
+    "@types/systemjs": "^0.20.1",
+    "@types/webpack": "^2.2.9",
+    "argparse": "^1.0.9",
+    "bluebird": "^3.4.7",
+    "chai": "^3.5.0",
+    "del": "^2.2.2",
+    "event-stream": "^3.3.4",
+    "fs-extra": "^2.0.0",
+    "gulp": "^3.9.1",
+    "gulp-help": "^1.6.1",
+    "gulp-newer": "^1.3.0",
+    "gulp-typescript": "^3.1.5",
+    "gulp-util": "^3.0.8",
+    "jsdom": "^9.11.0",
+    "karma": "^1.5.0",
+    "karma-browserstack-launcher": "^1.2.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-mocha": "^1.3.0",
+    "karma-typescript-preprocessor": "^0.3.1",
+    "mocha": "^3.2.0",
+    "systemjs": "^0.20.9",
+    "systemjs-plugin-text": "0.0.9",
+    "ts-node": "^2.1.0",
+    "tslint": "^4.5.1",
+    "tslint-config-lddubeau": "^1.0.0",
+    "typescript": "^2.2.1",
+    "versync": "^3.1.0",
+    "webpack": "^2.2.1"
+  },
+  "dependencies": {
+    "salve": "^4.0.2"
+  }
+}

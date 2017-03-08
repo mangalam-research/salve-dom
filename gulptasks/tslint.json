@@ -1,0 +1,6 @@
+{
+  "extends": "../tslint.json",
+  "rules": {
+    "missing-jsdoc": [false, "Not needed here"]
+  }
+}
