@@ -554,33 +554,54 @@ export class Validator {
           // already validation contents
           this._previousChild.nextSibling;
 
-        while (node !== null) {
-          switch (node.nodeType) {
-          case Node.TEXT_NODE:
-            const event = new Event("text", (node as Text).data);
+        let textAccumulator: string[] = [];
+        let textAccumulatorNode: Node | undefined;
+
+        const flushText = () => {
+          if (textAccumulator.length) {
+            const event = new Event("text", textAccumulator.join(""));
             const eventResult = walker.fireEvent(event);
             if (eventResult instanceof Array) {
               this._processEventResult(
-                eventResult, node.parentNode,
+                eventResult, textAccumulatorNode!.parentNode,
                 // We are never without a parentNode here.
-                _indexOf(node.parentNode!.childNodes, node));
+                _indexOf(textAccumulatorNode!.parentNode!.childNodes,
+                         textAccumulatorNode!));
+            }
+          }
+          textAccumulator = [];
+          textAccumulatorNode = undefined;
+        };
+
+        while (node !== null) {
+          switch (node.nodeType) {
+          case Node.TEXT_NODE:
+            // Salve does not allow multiple text events in a row. If text
+            // is encountered, then all the text must be passed to salve
+            // as a single event. We record the text and will flush it to
+            // salve later.
+            textAccumulator.push((node as Text).data);
+            if (!textAccumulatorNode) {
+              textAccumulatorNode = node;
             }
             break;
           case Node.ELEMENT_NODE:
+            flushText();
             portion /= curEl.childElementCount;
             this._curEl = curEl = node as Element;
             stage = this._validationStage = Stage.START_TAG;
             this._previousChild = null;
             continue stage_change;
+          case Node.COMMENT_NODE:
+            break; // We just skip over comment nodes.
           default:
             throw new Error(`unexpected node type: ${node.nodeType}`);
           }
           node = node.nextSibling;
         }
 
-        if (node === null) {
-          stage = this._validationStage = Stage.END_TAG;
-        }
+        flushText();
+        stage = this._validationStage = Stage.END_TAG;
         break;
       }
       case Stage.END_TAG: {
