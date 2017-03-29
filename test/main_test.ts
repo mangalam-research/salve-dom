@@ -84,7 +84,7 @@ describe("Validator", () => {
     });
   }
 
-  describe(verbose ? "" : "first block", () => {
+  describe(!verbose ? "" : "first block", () => {
     function makeValidator(tree: Element | Document): Validator {
       return new Validator(grammar, tree, {
         maxTimespan: 0,
@@ -286,7 +286,7 @@ describe("Validator", () => {
     });
   });
 
-  describe(verbose ? "" : "second block", () => {
+  describe(!verbose ? "" : "second block", () => {
     let tree: Document;
     before(() => util.fetchText(testFile("wildcard_converted.xml"))
            .then((text) => tree = parser.parse(text)));
@@ -694,7 +694,7 @@ describe("Validator", () => {
         assert.equal(walker, revealed._getWalkerAt(el, 0, false));
       });
 
-      makeTest("does not cache walkers that are too close (element)",
+      makeTest("but does not cache walkers that are too close (element)",
                (p, revealed, tree) => {
                  const initialMax = revealed._walkerCacheMax;
                  const el = tree.getElementsByTagName("em")[100];
