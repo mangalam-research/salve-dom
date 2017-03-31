@@ -107,6 +107,18 @@ you need a polyfill that provides it.** Chrome and Firefox have not needed such
 polyfill for a long time but IE and Edge need it. (A polyfill is included in the
 ``polyfills`` subdirectory.)
 
+Performance Note on FF
+======================
+
+The performance on FF 52 is **bad**. Most of the browsers mentioned above are in
+the same ballpark performance-wise. However, when the test suite is run on FF
+52, it takes easily 3 to 4 times as long as on other browsers. There seem to be
+a noticable performance degradation bump at FF 49, getting progressively worse
+with newer versions.
+
+I unfortunately do not have time to track down what could be causing this
+performance drop on FF.
+
 Loading
 =======
 
@@ -122,3 +134,31 @@ Two general options:
    subdirectory of the installed package. These modules are in the CommonJS
    format. This allows creating custom bundles (e.g. combine salve-dom and salve
    in a single bundle).
+
+Acknowledgments
+===============
+
+[![BrowserStack](https://www.browserstack.com/images/mail/browserstack-logo-footer.png)](https://www.browserstack.com)
+
+salve-dom is tested using
+[BrowserStack](https://www.browserstack.com). BrowserStack provides this service
+for free under their program for supporting open-source software.
+
+salve-dom is also tested using [Sauce Labs](https://saucelabs.com/).  Sauce
+Labs provides this service for free under their Open Sauce program.
+
+Credits
+=======
+
+salve-dom is designed and developed by Louis-Dominique Dubeau, Director of
+Software Development for the Buddhist Translators Workbench project,
+Mangalam Research Center for Buddhist Languages.
+
+This software has been made possible in part by a Level I Digital Humanities
+Start-up Grant and a Level II Digital Humanities Start-up Grant from the
+National Endowment for the Humanities (grant numbers HD-51383-11 and
+HD-51772-13). Any views, findings, conclusions, or recommendations expressed
+in this software do not necessarily represent those of the National Endowment
+for the Humanities.
+
+[![NEH](http://www.neh.gov/files/neh_logo_horizontal_rgb.jpg)](http://www.neh.gov/)
