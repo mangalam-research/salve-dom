@@ -368,8 +368,7 @@ export class Validator {
   /**
    * Get the namespaces used in the document. This method does not cache its
    * information and scan the whole document independently of the current
-   * validation status. It is okay to call it on an uninitialized Validator
-   * because it does not use the regular validation machinery.
+   * validation status.
    *
    * @returns An object whose keys are namespace prefixes and values are lists
    * of namespace URIs.  The values are lists because prefixes can be redefined
