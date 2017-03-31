@@ -20,6 +20,7 @@ module.exports = function(config) {
         grep: config.grep,
       },
     },
+    reportSlowerThan: 200,
     files: [
       "https://cdn.jsdelivr.net/bluebird/3.4.3/bluebird.min.js",
       "polyfills/firstElementChild_etc.js",
