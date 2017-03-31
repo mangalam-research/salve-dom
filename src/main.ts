@@ -339,25 +339,27 @@ export class Validator {
   }
 
   /**
-   * Starts the background validation process. If the Validator object
-   * is not initialized yet, this will initialize it.
+   * Starts the background validation process.
    */
   start(): void {
     if (this._timeoutId !== undefined) {
       this._stop(WorkingState.WORKING);
     }
 
-    this._timeoutId = setTimeout(this._boundWrapper, this._timeout);
+    // When we call ``this.start``, we want the validation to start ASAP. So we
+    // do not use ``this._timeout`` here. However, we do not call
+    // ``this._workWrapper`` directly because we want to be able to call
+    // ``this.start`` from event handlers. If we did call ``this._workWrapper``
+    // directly, we'd be calling this._cycle from inside this._cycle, which is
+    // results in an internal error.
+    this._timeoutId = setTimeout(this._boundWrapper, 0);
   }
 
   /**
    * Get the namespaces defined in the schema passed to the
-   * Validator. It is a fatal error to call this on an uninitialized
    * Validator.
    *
    * @returns The namespaces known to the schema.
-   *
-   * @throws {Error} If called on uninitialized validator
    */
   getSchemaNamespaces(): string[] {
     return this.schema.getNamespaces();
