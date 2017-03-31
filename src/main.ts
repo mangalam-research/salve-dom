@@ -1005,8 +1005,6 @@ export class Validator {
       // default values of toInspect and dataKey are what we want
     }
     else {
-      // Damn hoisting.
-      let prev;
       if (isAttr(container)) {
         toInspect = container.ownerElement;
         dataKey = "EventIndexBeforeAttributes";
@@ -1025,7 +1023,7 @@ export class Validator {
         case Node.DOCUMENT_NODE:
           const node = container.childNodes[index];
 
-          prev = !node ?
+          const prev = !node ?
             (container as Element).lastElementChild :
             // It may not be an element, in which case we get "undefined".
             (node as Element).previousElementSibling;
