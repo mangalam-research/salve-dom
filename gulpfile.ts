@@ -197,7 +197,7 @@ gulp.task("pack", "Make an npm.", ["webpack"],
             packname = _packname.trim();
           }));
 
-gulp.task("install_test", ["pack"], Promise.coroutine(function *install(): any {
+gulp.task("install-test", ["pack"], Promise.coroutine(function *install(): any {
   const testDir = "build/install_dir";
   yield del(testDir);
   yield fs.mkdirAsync(testDir);
@@ -206,7 +206,7 @@ gulp.task("install_test", ["pack"], Promise.coroutine(function *install(): any {
   yield del(testDir);
 }) as any);
 
-gulp.task("publish", "Publish the package.", ["install_test"],
+gulp.task("publish", "Publish the package.", ["install-test"],
           () => execFile("npm", ["publish", packname], { cwd: "build" }));
 
 gulp.task("clean", "Remove the build.", () => del(["build"]));
