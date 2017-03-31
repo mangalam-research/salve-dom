@@ -48,7 +48,7 @@ describe("Validator", () => {
   let parser: util.Parser;
   let emptyTree: Element;
 
-  let teiSchemaText: string;
+  let teiSchemaGrammar: salve.Grammar;
   let grammar: salve.Grammar;
   let genericTree: Document;
   let multipleNamespacesTree: Document;
@@ -61,7 +61,7 @@ describe("Validator", () => {
       util.fetchText("test/schemas/simplified-rng.js")
         .then((text) => grammar = salve.constructTree(text)),
       util.fetchText("test/schemas/tei-simplified-rng.js")
-        .then((text) => teiSchemaText = text),
+        .then((text) => teiSchemaGrammar = salve.constructTree(text)),
       util.fetchText(testFile("multiple_namespaces_on_same_node_converted.xml"))
         .then((text) => multipleNamespacesTree = parser.parse(text)),
       util.fetchText(testFile("percent_to_parse_converted.xml"))
@@ -149,8 +149,7 @@ describe("Validator", () => {
     // wed moved from HTML to XML for the data tree.
     it("with two namespaces on the same node", (done) => {
       const tree = multipleNamespacesTree.cloneNode(true);
-      const teiGrammar = salve.constructTree(teiSchemaText);
-      const p = new Validator(teiGrammar, tree as Document, {
+      const p = new Validator(teiSchemaGrammar, tree as Document, {
         maxTimespan: 0, // Work forever.
       });
 
@@ -618,8 +617,7 @@ describe("Validator", () => {
                         top?: Document | Element): void {
         it(name, () => {
           const tree = top || defaultTree.cloneNode(true) as Document;
-          const teiGrammar = salve.constructTree(teiSchemaText);
-          const p = new Validator(teiGrammar, tree);
+          const p = new Validator(teiSchemaGrammar, tree);
           stopFn(p, tree);
         });
       }
