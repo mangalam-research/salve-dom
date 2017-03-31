@@ -70,7 +70,7 @@ module.exports = function(config) {
         browser: "IE",
         browser_version: "11",
         os: "Windows",
-        os_version: "10",
+        os_version: "8.1",
       },
       IE10: {
         base: "BrowserStack",
