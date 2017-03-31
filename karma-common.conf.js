@@ -15,6 +15,11 @@ module.exports = function(config) {
   const options = {
     basePath: ".",
     frameworks: ["mocha", "chai"],
+    client: {
+      mocha: {
+        grep: config.grep,
+      },
+    },
     files: [
       "https://cdn.jsdelivr.net/bluebird/3.4.3/bluebird.min.js",
       "polyfills/firstElementChild_etc.js",
