@@ -246,7 +246,7 @@ export class Validator {
   private _timeout: number = 200;
   private _maxTimespan: number = 100;
   private _timeoutId: number | undefined;
-  private _restarting: boolean = false;
+  private _resetting: boolean = false;
   private _errors: ErrorData[] = [];
   private readonly _boundWrapper: Function = this._workWrapper.bind(this);
 
@@ -452,9 +452,9 @@ export class Validator {
    */
   // tslint:disable-next-line: max-func-body-length
   private _cycle(): boolean {
-    // If we got here after a restart, then we've finished restarting.  If we
-    // were not restarting, then this is a noop.
-    this._restarting = false;
+    // If we got here after a reset, then we've finished resetting.  If we were
+    // not resetting, then this is a noop.
+    this._resetting = false;
 
     //
     // This check is meant to catch problems that could be hard to diagnose if
@@ -717,14 +717,23 @@ export class Validator {
    * @param node The element to start validation from.
    */
   restartAt(node: Node): void {
-    // We use `this._restarting` to avoid a costly reinitialization if this
+    this.resetTo(node);
+    this.start();
+  }
+
+  /**
+   * Reset validation to continue from a certain point.
+   *
+   * @param node The element to start validation from.
+   */
+  resetTo(node: Node): void {
+    // We use `this._resetting` to avoid a costly reinitialization if this
     // method is called twice in a row before any work has had a chance to be
     // done.
-    if (!this._restarting) {
-      this._restarting = true;
+    if (!this._resetting) {
+      this._resetting = true;
       this._resetTo(node);
     }
-    this.start();
   }
 
   private _erase(el: Element | Document): void {
