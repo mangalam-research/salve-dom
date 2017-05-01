@@ -500,7 +500,7 @@ describe("Validator", () => {
         },
         emptyTree);
 
-      makeTest("with actual contents, at root", (p, tree) => {
+      makeTest("at root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, false);
         const evs = walker.possible();
         assert.sameMembers(
@@ -508,13 +508,13 @@ describe("Validator", () => {
           [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
       });
 
-      makeTest("with actual contents, at end", (p, tree) => {
+      makeTest("at end", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, -1, false);
         const evs = walker.possible();
         assert.sameMembers(evs.toArray(), []);
       });
 
-      makeTest("with actual contents, start of html", (p, tree) => {
+      makeTest("start of html", (p, tree) => {
         const walker =
           reveal(p)._getWalkerAt(tree.getElementsByTagName("html")[0],
                                  0, false);
@@ -524,7 +524,7 @@ describe("Validator", () => {
           [new salve.Event("enterStartTag", new salve.Name("", "", "head"))]);
       });
 
-      makeTest("with actual contents, start of head", (p, tree) => {
+      makeTest("start of head", (p, tree) => {
         const walker =
           reveal(p)._getWalkerAt(tree.getElementsByTagName("head")[0],
                                  0, false);
@@ -534,20 +534,19 @@ describe("Validator", () => {
           [new salve.Event("enterStartTag", new salve.Name("", "", "title"))]);
       });
 
-      makeTest("with actual contents, start of title (start of text node)",
-               (p, tree) => {
-                 const el = tree.getElementsByTagName("title")[0].firstChild!;
-                 // Make sure we know what we are looking at.
-                 assert.equal(el.nodeType, Node.TEXT_NODE);
-                 const walker = reveal(p)._getWalkerAt(el, 0, false);
-                 const evs = walker.possible();
-                 assert.sameMembers(
-                   evs.toArray(),
-                   [new salve.Event("endTag", new salve.Name("", "", "title")),
-                    new salve.Event("text", /^.*$/)]);
-               });
+      makeTest("start of title (start of text node)", (p, tree) => {
+        const el = tree.getElementsByTagName("title")[0].firstChild!;
+        // Make sure we know what we are looking at.
+        assert.equal(el.nodeType, Node.TEXT_NODE);
+        const walker = reveal(p)._getWalkerAt(el, 0, false);
+        const evs = walker.possible();
+        assert.sameMembers(
+          evs.toArray(),
+          [new salve.Event("endTag", new salve.Name("", "", "title")),
+           new salve.Event("text", /^.*$/)]);
+      });
 
-      makeTest("with actual contents, index inside text node", (p, tree) => {
+      makeTest("index inside text node", (p, tree) => {
         const el = tree.getElementsByTagName("title")[0].firstChild!;
         // Make sure we know what we are looking at.
         assert.equal(el.nodeType, Node.TEXT_NODE);
@@ -559,7 +558,7 @@ describe("Validator", () => {
            new salve.Event("text", /^.*$/)]);
       });
 
-      makeTest("with actual contents, end of title", (p, tree) => {
+      makeTest("end of title", (p, tree) => {
         const title = tree.getElementsByTagName("title")[0];
         const walker =
           reveal(p)._getWalkerAt(title, title.childNodes.length, false);
@@ -570,7 +569,7 @@ describe("Validator", () => {
            new salve.Event("text", /^.*$/)]);
       });
 
-      makeTest("with actual contents, end of head", (p, tree) => {
+      makeTest("end of head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(el, el.childNodes.length, false);
         const evs = walker.possible();
@@ -579,7 +578,7 @@ describe("Validator", () => {
           [new salve.Event("endTag", new salve.Name("", "", "head"))]);
       });
 
-      makeTest("with actual contents, after head", (p, tree) => {
+      makeTest("after head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el) + 1,
@@ -590,13 +589,13 @@ describe("Validator", () => {
           [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
       });
 
-      makeTest("with actual contents, attributes on root", (p, tree) => {
+      makeTest("attributes on root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, true);
         const evs = walker.possible();
         assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
       });
 
-      makeTest("with actual contents, attributes on element", (p, tree) => {
+      makeTest("attributes on element", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
