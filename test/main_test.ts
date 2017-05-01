@@ -602,6 +602,17 @@ describe("Validator", () => {
         const evs = walker.possible();
         assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
       });
+
+      makeTest("attributes on element with prev sibling", (p, tree) => {
+        const el = tree.getElementsByTagName("body")[0];
+        // Check our precondition. We want to test an element which has a
+        // previous element sibling.
+        assert.isNotNull(el.previousElementSibling, "precondition failure");
+        const walker = reveal(p)._getWalkerAt(
+          el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
+        const evs = walker.possible();
+        assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+      });
     });
 
     describe("handles namespace attributes", () => {

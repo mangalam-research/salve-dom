@@ -1036,13 +1036,12 @@ export class Validator {
             // It may not be an element, in which case we get "undefined".
             (node as Element).previousElementSibling;
 
-          if (prev) {
-            toInspect = prev;
-          }
-          // toInspect's default is fine for the next few options
-          else if (attributes) {
+          if (attributes) {
             dataKey = "EventIndexAfterAttributes";
             toInspect = node;
+          }
+          else if (prev) {
+            toInspect = prev;
           }
           else {
             dataKey = "EventIndexAfterStart";
