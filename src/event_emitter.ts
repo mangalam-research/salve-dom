@@ -15,30 +15,11 @@ export type SpecializedMap<Events> = {
 };
 
 /**
- * This declares a type which covers all the values in a mapping type. For
- * instance given the interface:
- *
- *     interface Foo {
- *       a: number;
- *       b: Bar;
- *     }
- *
- * Then ``AllValues<Foo, keyof Foo>`` would resolve to ``number | Bar``.
- */
-export type AllValues<Map, Key extends keyof Map> = Map[Key];
-
-/**
- * Utility type to gather all the events in an events map.
- */
-export type AllEvents<Events> =
-  AllValues<SpecializedMap<Events>, keyof SpecializedMap<Events>>;
-
-/**
- * A listener for listening on the "*" event: it accepts the union of all
- * possible event types defined in the map.
+ * A listener for listening on the "*" event: the ``ev`` parameter accepts the
+ * union of all possible event types defined in the ``Events`` map.
  */
 export type GeneralListener<Events> =
-  (name: string, ev: AllEvents<Events>) => (boolean | void);
+  (name: string, ev: SpecializedMap<Events>[keyof Events]) => (boolean | void);
 
 /**
  * This is an interface that can be used to hide the ``_emit`` method.
