@@ -1486,5 +1486,47 @@ export class Validator {
        */
       this._events._emit("possible-due-to-wildcard-change", node);
     }
-  };
+  }
+
+  /**
+   * Resolve a qualified name to an expanded name. See
+   * [["name_resolver".NameResolver.resolveName]] for what resolving means.
+   * This method takes into account namespaces defined on parent nodes.
+   *
+   * @param container Where to perform the operation.
+   *
+   * @param index Where to perform the operation.
+   *
+   * @param name The name to rresolve.
+   *
+   * @param attributes Whether the name is an attribute's name.
+   *
+   * @return The resolved name.
+   */
+  resolveNameAt(container: Node, index: number, name: string,
+                attribute: boolean = false): EName | undefined {
+    // Even when ``attribute`` is true, we want to call ``_getWalkerAt`` with
+    // its ``attribute`` parameter ``false``.
+    return this._getWalkerAt(container, index).resolveName(name, attribute);
+  }
+
+  /**
+   * Unresolve an expanded name to a qualified name. See
+   * [["name_resolver".NameResolver.unresolveName]] for what unresolving
+   * means. This method takes into account namespaces defined on parent nodes.
+   *
+   * @param container Where to perform the operation.
+   *
+   * @param index Where to perform the operation.
+   *
+   * @param uri The URI to unresolve.
+   *
+   * @param name The name to unresolve.
+   *
+   * @return The unresolved name.
+   */
+  unresolveNameAt(container: Node, index: number, uri: string,
+                  name: string): string | undefined {
+    return this._getWalkerAt(container, index).unresolveName(uri, name);
+  }
 }

@@ -1,3 +1,7 @@
+1.2.0:
+
+ - Added ``unresolveNameAt`` and ``resolveNameAt``.
+
 1.1.1:
 
  - Fixed an error in ``_validateUpTo``. If it was called to validate up to the

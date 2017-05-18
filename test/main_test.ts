@@ -1046,6 +1046,66 @@ describe("Validator", () => {
                assert.equal(errors.length, 0);
              });
   });
+
+  describe("resolveNameAt/unresolveNameAt", () => {
+    let p: Validator;
+    let tree: Document;
+    before(
+      () => util.fetchText(testFile("resolve_unresolve_names_converted.xml"))
+        .then((data) => {
+          tree = parser.parse(data);
+          p = new Validator(grammar, tree, {
+            maxTimespan: 0, // Work forever.
+          });
+        }));
+
+    describe("resolveNameAt", () => {
+      it("at root", () => {
+        const tei = tree.getElementsByTagName("TEI")[0];
+        assert.deepEqual(p.resolveNameAt(tei, 0, "teiHeader"),
+                         // tslint:disable-next-line:no-http-string
+                         new salve.EName("http://www.tei-c.org/ns/1.0",
+                                         "teiHeader"));
+        // Attribute.
+        assert.deepEqual(p.resolveNameAt(tei, 0, "teiHeader", true),
+                         new salve.EName("", "teiHeader"));
+        assert.deepEqual(p.resolveNameAt(tei, 0, "foo:teiHeader"),
+                         new salve.EName("fooURI", "teiHeader"));
+      });
+
+      it("in element that changes mappings", () => {
+        const body = tree.getElementsByTagName("body")[0];
+        assert.deepEqual(p.resolveNameAt(body, 0, "teiHeader"),
+                         // tslint:disable-next-line:no-http-string
+                         new salve.EName("http://www.tei-c.org/ns/1.0",
+                                         "teiHeader"));
+        assert.deepEqual(p.resolveNameAt(body, 0, "foo:teiHeader"),
+                         new salve.EName("changed", "teiHeader"));
+      });
+    });
+
+    describe("unresolveNameAt", () => {
+      it("at root", () => {
+        const tei = tree.getElementsByTagName("TEI")[0];
+        // tslint:disable-next-line:no-http-string
+        assert.equal(p.unresolveNameAt(tei, 0, "http://www.tei-c.org/ns/1.0",
+                                       "teiHeader"),
+                     "teiHeader");
+        assert.equal(p.unresolveNameAt(tei, 0, "fooURI", "teiHeader"),
+                     "foo:teiHeader");
+      });
+
+      it("in element that changes mappings", () => {
+        const body = tree.getElementsByTagName("body")[0];
+        // tslint:disable-next-line:no-http-string
+        assert.equal(p.unresolveNameAt(body, 0, "http://www.tei-c.org/ns/1.0",
+                                       "teiHeader"),
+                     "teiHeader");
+        assert.equal(p.unresolveNameAt(body, 0, "changed", "teiHeader"),
+                     "foo:teiHeader");
+      });
+    });
+  });
 });
 
 //  LocalWords:  enterStartTag html jQuery Dubeau MPL Mangalam config
