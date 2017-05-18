@@ -47,7 +47,7 @@ describe("Webpack test", () => {
     const oldStop = p.stop;
     p.stop = function stop(): void {
       oldStop.call(p);
-      assert.equal(p.getWorkingState().state, main.VALID);
+      assert.equal(p.getWorkingState().state, main.WorkingState.VALID);
       assert.equal(p.errors.length, 0);
       done();
     };
