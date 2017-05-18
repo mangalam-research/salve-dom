@@ -445,8 +445,9 @@ describe("Validator", () => {
 
     makeTest("with actual contents, after head", (p, tree) => {
       const el = tree.getElementsByTagName("head")[0];
-      const evs = p.possibleAt(el.parentNode!,
-                               _indexOf.call(el.parentNode!.childNodes, el) + 1);
+      const evs = p.possibleAt(
+        el.parentNode!,
+        _indexOf.call(el.parentNode!.childNodes, el) as number + 1);
       assert.sameMembers(
         evs.toArray(),
         [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
@@ -581,7 +582,8 @@ describe("Validator", () => {
       makeTest("after head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(
-          el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el) + 1,
+          el.parentNode!,
+          _indexOf.call(el.parentNode!.childNodes, el) as number + 1,
           false);
         const evs = walker.possible();
         assert.sameMembers(
