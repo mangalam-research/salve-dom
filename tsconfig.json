@@ -2,7 +2,8 @@
   "extends": "./tsconfig-base",
   "compilerOptions": {
     "allowJs": true,
-    "target": "es2015"
+    "target": "es2015",
+    "noEmit": true
   },
   "include": [
     "*.ts",

@@ -174,17 +174,25 @@ gulp.task("versync", "Run a version check on the code.",
             onMessage: gutil.log,
           }));
 
-//
-// There are problems trying to run gulp-tslint with a project file, which is
-// needed by --type-check. See:
-//
-// https://github.com/panuhorsmalahti/gulp-tslint/issues/77
-// https://github.com/panuhorsmalahti/gulp-tslint/issues/105
-//
-gulp.task("tslint", "Lint.", () =>
-          spawn("./node_modules/.bin/tslint",
-                ["--type-check", "*.ts", "{src,test,gulptasks}/**/*.ts"],
-                { stdio: "inherit" }));
+function runTslint(tsconfig: string, tslintConfig: string): Promise<void> {
+  return spawn("./node_modules/.bin/tslint",
+               ["--type-check", "--format", "verbose", "--project",
+                tsconfig, "-c", tslintConfig],
+               { stdio: "inherit" });
+}
+
+gulp.task("tslint-src", "Lint src.", () => runTslint("src/tsconfig.json",
+                                                     "tslint.json"));
+
+gulp.task("tslint-tests", "Lint tests files.",
+          () => runTslint("test/tsconfig.json", "test/tslint.json"));
+
+gulp.task("tslint-aux", "Lint auxiliary files.",
+          () => runTslint("tsconfig.json", "tslint.json"));
+
+gulp.task("tslint", "Lint all the typescript files.", ["tslint-src",
+                                                       "tslint-tests",
+                                                       "tslint-aux"]);
 
 gulp.task("test", "Run the tests.", ["default", "tslint", "versync", "karma"]);
 
