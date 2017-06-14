@@ -305,7 +305,7 @@ export class Validator {
   }
 
   /**
-   * Function allowing to get a custom properties set on [[Node]] objects by
+   * Function allowing to get a custom properties set on ``Node`` objects by
    * this class.
    */
   getNodeProperty<T extends CustomNodeProperty>(
@@ -315,7 +315,7 @@ export class Validator {
     }
 
   /**
-   * Function allowing to set a custom properties set on [[Node]] objects by
+   * Function allowing to set a custom properties set on ``Node`` objects by
    * this class.
    */
   private _setNodeProperty<T extends CustomNodeProperty>(
@@ -1490,8 +1490,8 @@ export class Validator {
 
   /**
    * Resolve a qualified name to an expanded name. See
-   * [["name_resolver".NameResolver.resolveName]] for what resolving means.
-   * This method takes into account namespaces defined on parent nodes.
+   * ``"salve".NameResolver.resolveName`` for what resolving means.  This method
+   * takes into account namespaces defined on parent nodes.
    *
    * @param container Where to perform the operation.
    *
@@ -1512,8 +1512,8 @@ export class Validator {
 
   /**
    * Unresolve an expanded name to a qualified name. See
-   * [["name_resolver".NameResolver.unresolveName]] for what unresolving
-   * means. This method takes into account namespaces defined on parent nodes.
+   * ``"salve".NameResolver.unresolveName`` for what unresolving means. This
+   * method takes into account namespaces defined on parent nodes.
    *
    * @param container Where to perform the operation.
    *
