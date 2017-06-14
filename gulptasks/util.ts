@@ -1,12 +1,16 @@
+// tslint:disable: missing-jsdoc
 import * as Promise from "bluebird";
 import * as childProcess from "child_process";
 import * as _fs from "fs-extra";
 import * as gulp from "gulp";
 import * as gulpNewer from "gulp-newer";
 import * as gutil from "gulp-util";
+import * as touch from "touch";
 
 declare module "fs-extra" {
   export function mkdirAsync(dir: string): Promise<any>;
+  export function readFileAsync(path: string): Promise<Buffer>;
+  export function writeFileAsync(path: string, content: string): Promise<void>;
 }
 
 function promisifyFS<T>(x: T): T {
@@ -17,6 +21,7 @@ export const fs = promisifyFS(_fs);
 
 export const mkdirpAsync = (fs as any).ensureDirAsync.bind(fs);
 export const copy = (fs as any).copyAsync.bind(fs);
+export const touchAsync = Promise.promisify(touch);
 
 export function cprp(src: string, dest: string): void {
   return copy(src, dest, { clobber: true, preserveTimestamps: true });

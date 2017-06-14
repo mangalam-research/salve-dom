@@ -13,7 +13,7 @@ import * as path from "path";
 import * as versync from "versync";
 import * as webpack from "webpack";
 import { cprp, exec, execFile, existsInFile, fs, mkdirpAsync, newer,
-         spawn } from "./gulptasks/util";
+         spawn, touchAsync } from "./gulptasks/util";
 import * as webpackConfig from "./webpack.config";
 
 const gulp = help(originalGulp);
@@ -216,5 +216,45 @@ gulp.task("install-test", ["pack"], Promise.coroutine(function *install(): any {
 
 gulp.task("publish", "Publish the package.", ["install-test"],
           () => execFile("npm", ["publish", packname], { cwd: "build" }));
+
+// This task also needs to check the hash of the latest commit because typedoc
+// generates links to source based on the latest commit in effect when it is
+// run. So if a commit happened between the time the doc was generated last, and
+// now, we need to regenerate the docs.
+gulp.task("typedoc", "Generate the documentation", ["tslint"],
+          Promise.coroutine(function *task(): any {
+            const sources = ["src/**/*.ts"];
+            const stamp = "build/api.stamp";
+            const hashPath = "./build/typedoc.hash.txt";
+
+            const [savedHash, [currentHash]] = yield Promise.all(
+              [fs.readFileAsync(hashPath)
+               .then(hash => hash.toString())
+               .catch(() => undefined),
+               execFile("git", ["rev-parse", "--short", "HEAD"], {})
+               .then(([stdout]) => stdout),
+              ]);
+
+            if ((currentHash === savedHash) && !(yield newer(sources, stamp))) {
+              gutil.log("No change, skipping typedoc.");
+              return;
+            }
+
+            const tsoptions = [
+              "--out", "./build/api",
+              "--name", "salve-dom",
+              "--tsconfig", "./src/tsconfig.json",
+              "--listInvalidSymbolLinks",
+            ];
+
+            if (!globalOptions.doc_private) {
+              tsoptions.push("--excludePrivate");
+            }
+
+            yield spawn("./node_modules/.bin/typedoc", tsoptions, { stdio: "inherit" });
+
+            yield Promise.all([fs.writeFileAsync(hashPath, currentHash),
+                               touchAsync(stamp)]);
+          }) as any);
 
 gulp.task("clean", "Remove the build.", () => del(["build"]));
