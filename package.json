@@ -75,6 +75,6 @@
     "webpack": "^2.2.1"
   },
   "dependencies": {
-    "salve": "^4.1.1"
+    "salve": "^4.1.2"
   }
 }
