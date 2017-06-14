@@ -22,14 +22,16 @@ export function getEmptyTree(): Element {
   const frag = document.createDocumentFragment();
   const emptyTree = document.createElement("div");
   frag.appendChild(emptyTree);
+
   return emptyTree;
 }
 
 export function fetchText(name: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    fs.readFile(name, (err: Error | null, data: Buffer) => {
-      if (err) {
+    fs.readFile(name, (err: Error, data: Buffer) => {
+      if (err != null) {
         reject(err);
+
         return;
       }
 

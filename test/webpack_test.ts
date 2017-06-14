@@ -26,6 +26,7 @@ describe("Webpack test", () => {
   before(() => {
     parser = util.getParser();
     emptyTree = util.getEmptyTree();
+
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
         .then((text) => grammar = salve.constructTree(text)),

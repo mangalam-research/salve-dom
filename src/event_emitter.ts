@@ -135,10 +135,12 @@ export class EventEmitter<Events> implements Consuming<Events> {
     // safe to pass this stub.
     const me = (...args: any[]) => {
       this.removeEventListener(eventName as any, me);
+
       return listener.apply(this, args);
     };
 
     this.addEventListener(eventName as any, me);
+
     return me;
   }
 
@@ -205,7 +207,7 @@ export class EventEmitter<Events> implements Consuming<Events> {
 
     {
       let listeners = this._generalListeners;
-      if (listeners && listeners.length > 0) {
+      if (listeners.length > 0) {
         // We take a copy so that if any of the handlers add or remove
         // listeners, they don't disturb our work here.
         listeners = listeners.slice();
@@ -221,7 +223,7 @@ export class EventEmitter<Events> implements Consuming<Events> {
 
     {
       let listeners = this._eventListeners[eventName];
-      if (listeners && listeners.length > 0) {
+      if (listeners !== undefined && listeners.length > 0) {
         // We take a copy so that if any of the handlers add or remove
         // listeners, they don't disturb our work here.
         listeners = listeners.slice();

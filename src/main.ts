@@ -15,6 +15,7 @@ function _indexOf(parent: NodeList, needle: Node): number {
 
 export function isAttr(it: Node): it is Attr {
   const attrNodeType = Node.ATTRIBUTE_NODE;
+
   // We check that ``attr_node_type`` is not undefined because eventually
   // ``ATTRIBUTE_NODE`` will be removed from the ``Node`` interface, and then we
   // could be testing ``undefined === undefined`` for objects which are not
@@ -157,10 +158,10 @@ export interface WorkingStateData {
 declare global {
   //
   // Blegh... the global environment that TypeScript defines is based on IE
-  // poop. This code requires the following to be true. Users must load a shim to
-  // ensure it in crap browsers like IE.
+  // poop. This code requires the following to be true. Users must load a shim
+  // to ensure it in crap browsers like IE.
   //
-  // tslint:disable-next-line: no-empty-interfaces
+  // tslint:disable-next-line: no-empty-interface
   interface Text extends ElementTraversal {}
 }
 
@@ -272,7 +273,8 @@ export class Validator {
               private readonly root: Element | Document,
               options: Options = {}) {
 
-    const keys: (keyof Options)[] = ["timeout", "maxTimespan", "walkerCacheGap"];
+    const keys: (keyof Options)[] = ["timeout", "maxTimespan",
+                                     "walkerCacheGap"];
     for (const key of keys) {
       const value = options[key];
       if (value === undefined) {
@@ -283,10 +285,10 @@ export class Validator {
         throw new Error(`the value for ${key} cannot be negative`);
       }
 
-      (this as any)["_" + key] = options[key];
+      (this as any)[`_${key}`] = options[key];
     }
 
-    if (options.prefix) {
+    if (options.prefix !== undefined) {
       this._prefix = options.prefix;
     }
 
@@ -378,7 +380,7 @@ export class Validator {
     const ret: {[key: string]: string[]} = {};
 
     function _process(node: Node | null): void {
-      if (!node) {
+      if (node === null) {
         return;
       }
 
@@ -388,7 +390,7 @@ export class Validator {
         if (attr.name.lastIndexOf("xmlns", 0) === 0) {
           const key = attr.name.slice(6);
           let array = ret[key];
-          if (!array) {
+          if (array === undefined) {
             array = ret[key] = [];
           }
           array.push(attr.value);
@@ -396,7 +398,7 @@ export class Validator {
       }
 
       let child = node.firstChild;
-      while (child) {
+      while (child !== null) {
         if (child.nodeType === Node.ELEMENT_NODE) {
           _process(child);
         }
@@ -405,6 +407,7 @@ export class Validator {
     }
 
     _process(this.root.firstChild);
+
     return ret;
   }
 
@@ -450,7 +453,7 @@ export class Validator {
    *
    * @throws {Error} When there is an internal error.
    */
-  // tslint:disable-next-line: max-func-body-length
+  // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
   private _cycle(): boolean {
     // If we got here after a reset, then we've finished resetting.  If we were
     // not resetting, then this is a noop.
@@ -513,10 +516,11 @@ export class Validator {
         }
 
         const tagName = curEl.tagName;
+        // tslint:disable-next-line:no-non-null-assertion
         const parent = curEl.parentNode!;
         const curElIndex = _indexOf(parent.childNodes, curEl);
         let ename = walker.resolveName(tagName, false);
-        if (!ename) {
+        if (ename === undefined) {
           this._processEventResult(
             [new ValidationError(`cannot resolve the name ${tagName}`)],
             parent, curElIndex);
@@ -545,6 +549,7 @@ export class Validator {
         stage = this._validationStage = Stage.CONTENTS;
         this._setNodeProperty(curEl, "EventIndexAfterStart", events.length);
         this._cycleEntered--;
+
         return true; // state change
         // break would be unreachable.
       }
@@ -559,15 +564,19 @@ export class Validator {
         let textAccumulatorNode: Node | undefined;
 
         const flushText = () => {
-          if (textAccumulator.length) {
+          if (textAccumulator.length !== 0) {
             const event = new Event("text", textAccumulator.join(""));
             const eventResult = walker.fireEvent(event);
             if (eventResult instanceof Array) {
+              if (textAccumulatorNode === undefined) {
+                throw new Error("flushText running with undefined node");
+              }
+              // We are never without a parentNode here.
+              // tslint:disable-next-line:no-non-null-assertion
+              const parent = textAccumulatorNode.parentNode!;
               this._processEventResult(
-                eventResult, textAccumulatorNode!.parentNode,
-                // We are never without a parentNode here.
-                _indexOf(textAccumulatorNode!.parentNode!.childNodes,
-                         textAccumulatorNode!));
+                eventResult, parent,
+                _indexOf(parent.childNodes, textAccumulatorNode));
             }
           }
           textAccumulator = [];
@@ -577,12 +586,12 @@ export class Validator {
         while (node !== null) {
           switch (node.nodeType) {
           case Node.TEXT_NODE:
-            // Salve does not allow multiple text events in a row. If text
-            // is encountered, then all the text must be passed to salve
-            // as a single event. We record the text and will flush it to
-            // salve later.
+            // Salve does not allow multiple text events in a row. If text is
+            // encountered, then all the text must be passed to salve as a
+            // single event. We record the text and will flush it to salve
+            // later.
             textAccumulator.push((node as Text).data);
-            if (!textAccumulatorNode) {
+            if (textAccumulatorNode === undefined) {
               textAccumulatorNode = node;
             }
             break;
@@ -619,6 +628,7 @@ export class Validator {
           this._stop(this._errors.length > 0 ? WorkingState.INVALID :
                      WorkingState.VALID);
           this._cycleEntered--;
+
           return false;
         }
 
@@ -626,7 +636,7 @@ export class Validator {
         const originalElement = curEl;
         const tagName = (curEl as Element).tagName;
         let ename = walker.resolveName(tagName, false);
-        if (!ename) {
+        if (ename === undefined) {
           // We just produce the name name we produced when we encountered the
           // start tag.
           ename = new EName("", tagName);
@@ -640,6 +650,7 @@ export class Validator {
         // Go back to the parent
         this._previousChild = curEl;
         // We are never without a parentNode here.
+        // tslint:disable-next-line:no-non-null-assertion
         this._curEl = curEl = curEl.parentNode! as Element;
 
         let nextDone = this._partDone;
@@ -656,6 +667,7 @@ export class Validator {
                               this._validationEvents.length);
         stage = this._validationStage = Stage.CONTENTS;
         this._cycleEntered--;
+
         return true; // state_change
       }
         // break; would be unreachable
@@ -739,7 +751,7 @@ export class Validator {
   private _erase(el: Element | Document): void {
     this._clearNodeProperties(el);
     let child = el.firstElementChild;
-    while (child) {
+    while (child !== null) {
       this._erase(child);
       child = child.nextElementSibling;
     }
@@ -812,7 +824,8 @@ export class Validator {
        *
        * @event module:validator~Validator#state-update
        */
-      this._events._emit("state-update", { state: newState, partDone: newDone });
+      this._events._emit("state-update",
+                         { state: newState, partDone: newDone });
     }
   }
 
@@ -884,6 +897,7 @@ export class Validator {
                                el: Element): void {
     // Find all attributes, fire events for them.
     const attributes = el.attributes;
+    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < attributes.length; ++i) {
       const attr = attributes[i];
       // Skip those attributes which are namespace attributes.
@@ -909,10 +923,11 @@ export class Validator {
                                   attr: Attr): boolean {
     const attrName = attr.name;
     const ename = walker.resolveName(attrName, true);
-    if (!ename) {
+    if (ename === undefined) {
       this._processError(
         {error: new ValidationError(
           `cannot resolve attribute name ${attrName}`), node: attr, index: 0});
+
       return false;
     }
     this._setPossibleDueToWildcard(attr, walker, "attributeName",
@@ -920,6 +935,7 @@ export class Validator {
     this._fireAndProcessEvent(
       walker,
       new Event("attributeName", ename.ns, ename.name), attr, 0);
+
     return true;
   }
 
@@ -943,9 +959,9 @@ export class Validator {
                                ix?: number): void {
     this._validationEvents.push(event);
     const eventResult = walker.fireEvent(event);
-    if (eventResult) {
-      if (el && ix && typeof ix !== "number") {
-        ix = el ? _indexOf(el.childNodes, ix) : undefined;
+    if (eventResult instanceof Array) {
+      if (el != null && ix !== undefined && typeof ix !== "number") {
+        ix = _indexOf(el.childNodes, ix);
       }
       this._processEventResult(eventResult, el, ix);
     }
@@ -983,7 +999,7 @@ export class Validator {
   private _validateUpTo(container: Node, index: number,
                         attributes: boolean = false): void {
     attributes = !!attributes; // Normalize.
-    if (attributes && (!container.childNodes ||
+    if (attributes && (container.childNodes === undefined ||
                        container.childNodes[index].nodeType !==
                        Node.ELEMENT_NODE)) {
       throw new Error("trying to validate after attributes but before " +
@@ -1021,7 +1037,8 @@ export class Validator {
         switch (container.nodeType) {
         case Node.TEXT_NODE:
           toInspect = (container as any).previousElementSibling;
-          if (!toInspect) {
+          if (toInspect === null) {
+            // tslint:disable-next-line:no-non-null-assertion
             toInspect = container.parentNode!;
             dataKey = "EventIndexAfterStart";
           }
@@ -1031,7 +1048,7 @@ export class Validator {
         case Node.DOCUMENT_NODE:
           const node = container.childNodes[index];
 
-          const prev = !node ?
+          const prev = node === undefined ?
             (container as Element).lastElementChild :
             // It may not be an element, in which case we get "undefined".
             (node as Element).previousElementSibling;
@@ -1040,7 +1057,7 @@ export class Validator {
             dataKey = "EventIndexAfterAttributes";
             toInspect = node;
           }
-          else if (prev) {
+          else if (prev !== null) {
             toInspect = prev;
           }
           else {
@@ -1056,7 +1073,7 @@ export class Validator {
     while (this.getNodeProperty(toInspect, dataKey) === undefined) {
       this._cycle();
     }
-  };
+  }
 
   /**
    * Gets the walker which would represent the state of parsing at the point
@@ -1082,11 +1099,11 @@ export class Validator {
    * @throws {EventIndexException} If it runs out of events or computes an event
    * index that makes no sense.
    */
-  // tslint:disable-next-line: max-func-body-length
+  // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
   private _getWalkerAt(container: Node, index: number,
                        attributes: boolean = false): GrammarWalker {
     attributes = !!attributes; // Normalize.
-    if (attributes && (!container.childNodes ||
+    if (attributes && (container.childNodes === undefined ||
                        container.childNodes[index].nodeType !==
                        Node.ELEMENT_NODE)) {
       throw new Error("trying to get a walker for attribute events on a " +
@@ -1116,7 +1133,7 @@ export class Validator {
 
     let walker: GrammarWalker | undefined;
     function fireTextEvent(textNode: Text): void {
-      if (!walker) {
+      if (walker === undefined) {
         throw new Error("calling fireTextEvent without a walker");
       }
       walker.fireEvent(new Event("text", textNode.data));
@@ -1125,6 +1142,7 @@ export class Validator {
     if (isAttr(container)) {
       const el = container.ownerElement;
       walker = this.readyWalker(
+        // tslint:disable-next-line:no-non-null-assertion
         this.getNodeProperty(el, "EventIndexBeforeAttributes")!);
 
       // Don't fire on namespace attributes.
@@ -1137,10 +1155,19 @@ export class Validator {
       switch (container.nodeType) {
       case Node.TEXT_NODE: {
         const prev = (container as Text).previousElementSibling;
-        walker = this.readyWalker(
-          prev ? this.getNodeProperty(prev, "EventIndexAfter")! :
-            this.getNodeProperty(container.parentNode!,
-                                 "EventIndexAfterStart")!);
+        let getFrom;
+        let propName: "EventIndexAfter" | "EventIndexAfterStart";
+        if (prev !== null) {
+          getFrom = prev;
+          propName = "EventIndexAfter";
+        }
+        else {
+          // tslint:disable-next-line:no-non-null-assertion
+          getFrom = container.parentNode!;
+          propName = "EventIndexAfterStart";
+        }
+        // tslint:disable-next-line:no-non-null-assertion
+        walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
 
         // We will attempt to fire a text event if our location is inside the
         // current text node.
@@ -1161,25 +1188,34 @@ export class Validator {
       case Node.DOCUMENT_FRAGMENT_NODE: {
         const node = container.childNodes[index];
         let prev;
-        let eventIndex;
+        let getFrom;
+        let propName: CustomNodeProperty;
         if (!attributes) {
-          prev = !node ? (container as Element).lastElementChild :
+          prev = node === undefined ? (container as Element).lastElementChild :
             (node as Element).previousElementSibling;
 
-          eventIndex = prev ? this.getNodeProperty(prev, "EventIndexAfter")! :
-            this.getNodeProperty(container, "EventIndexAfterStart")!;
+          if (prev !== null) {
+            getFrom = prev;
+            propName = "EventIndexAfter";
+          }
+          else {
+            getFrom = container;
+            propName = "EventIndexAfterStart";
+          }
         }
         else {
-          eventIndex = this.getNodeProperty(node, "EventIndexAfterAttributes")!;
+          getFrom = node;
+          propName = "EventIndexAfterAttributes";
         }
 
-        walker = this.readyWalker(eventIndex);
+        // tslint:disable-next-line:no-non-null-assertion
+        walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
 
         if (!attributes) {
           // We will attempt to fire a text event if another text node appeared
           // between the node we care about and the element just before it.
-          const prevSibling = node && node.previousSibling;
-          if (prevSibling &&
+          const prevSibling = node != null ? node.previousSibling : null;
+          if (prevSibling !== null &&
               // If the previous sibling is the same as the previous *element*
               // sibbling, then there is nothing *between* that we need to take
               // care of.
@@ -1292,6 +1328,7 @@ export class Validator {
   possibleAt(container: Node, index: number, attributes: boolean = false):
   EventSet {
     const walker = this._getWalkerAt(container, index, attributes);
+
     // Calling possible does not *modify* the walker.
     return walker.possible();
   }
@@ -1331,8 +1368,9 @@ export class Validator {
         }
       }
     }
+
     return ret;
-  };
+  }
 
   /**
    * Validate a DOM fragment as if it were present at the point specified in the
@@ -1404,7 +1442,7 @@ export class Validator {
 
     // This forces validating the whole fragment
     dup._validateUpTo(toParse, toParse.childNodes.length);
-    if (dup._errors.length) {
+    if (dup._errors.length !== 0) {
       return dup._errors;
     }
 
@@ -1431,7 +1469,7 @@ export class Validator {
    */
   getErrorsFor(node: Node): ErrorData[] {
     const parent = node.parentNode;
-    if (!parent) {
+    if (parent === null) {
       throw new Error("node without a parent!");
     }
     // Validate to after the closing tag of the node.
@@ -1442,6 +1480,7 @@ export class Validator {
         ret.push(errorData);
       }
     }
+
     return ret;
   }
 

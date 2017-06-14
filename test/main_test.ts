@@ -22,7 +22,7 @@ const _indexOf = Array.prototype.indexOf;
 // ``void``. This fixes the problem for our own purposes here.
 function fail(message: string): never {
   assert.fail(message);
-  throw ""; // We won't ever get here but let's please TypeScript.
+  throw new Error("moo"); // We won't ever get here but let's please TypeScript.
 }
 
 class CustomValidator extends Validator {
@@ -57,6 +57,7 @@ describe("Validator", () => {
   before(() => {
     parser = util.getParser();
     emptyTree = util.getEmptyTree();
+
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
         .then((text) => grammar = salve.constructTree(text)),
@@ -359,6 +360,7 @@ describe("Validator", () => {
                       top?: Document | Element,
                       only: boolean = false): void {
       (only ? it.only : it)(name, () => {
+        // tslint:disable-next-line:strict-boolean-expressions
         const tree = top || genericTree.cloneNode(true) as Document;
         const p = new Validator(grammar, tree);
         stopFn(p, tree);
@@ -483,6 +485,7 @@ describe("Validator", () => {
                       stopFn: (p: Validator, tree: Document | Element) => void,
                       top?: Document | Element): void {
       it(name, () => {
+        // tslint:disable-next-line:strict-boolean-expressions
         const tree = top || genericTree.cloneNode(true) as Document;
         const p = new Validator(grammar, tree);
         stopFn(p, tree);
@@ -620,14 +623,17 @@ describe("Validator", () => {
     describe("handles namespace attributes", () => {
       let defaultTree: Document;
       before(() => util
-             .fetchText(testFile("multiple_namespaces_on_same_node_converted.xml"))
+             .fetchText(
+               testFile("multiple_namespaces_on_same_node_converted.xml"))
              .then((text) => defaultTree = parser.parse(text)));
 
       // eslint-disable-next-line no-shadow
       function makeTest(name: string,
-                        stopFn: (p: Validator, tree: Document | Element) => void,
+                        stopFn: (p: Validator,
+                                 tree: Document | Element) => void,
                         top?: Document | Element): void {
         it(name, () => {
+          // tslint:disable-next-line:strict-boolean-expressions
           const tree = top || defaultTree.cloneNode(true) as Document;
           const p = new Validator(teiSchemaGrammar, tree);
           stopFn(p, tree);
@@ -668,6 +674,7 @@ describe("Validator", () => {
                                  tree: Document | Element) => void,
                         top?: Document | Element): void {
         it(name, () => {
+          // tslint:disable-next-line:strict-boolean-expressions
           const tree = top || dataTree.cloneNode(true) as Document;
           const p = new Validator(grammar, tree);
           assert.equal(Object.keys((p as any)._walkerCache).length, 0);
@@ -840,7 +847,8 @@ describe("Validator", () => {
          const body = tree.getElementsByTagName("body")[0];
          const container = body.parentNode!;
          const index = _indexOf.call(container.childNodes, body);
-         const em = body.ownerDocument.createElementNS("unknown", "foo:unknown");
+         const em = body.ownerDocument.createElementNS("unknown",
+                                                       "foo:unknown");
          const ret = p.speculativelyValidate(container, index, em);
          if (ret instanceof Array) {
            assert.equal(ret.length, 2);
@@ -851,6 +859,7 @@ describe("Validator", () => {
              "tag not allowed here: {\"ns\":\"\",\"name\":\"foo:unknown\"}");
          }
          else {
+           // tslint:disable-next-line:no-unused-expression
            fail("ret is not an array") as never;
          }
        });
@@ -870,6 +879,7 @@ describe("Validator", () => {
                         "cannot resolve attribute name foo:unknown");
          }
          else {
+           // tslint:disable-next-line:no-unused-expression
            fail("ret is not an array") as never;
          }
        });
@@ -1000,7 +1010,7 @@ describe("Validator", () => {
                       stopFn: (p: Validator, tree: Document) => void): void {
       it(name, (done) => {
         const tree = genericTree.cloneNode(true) as Document;
-        if (preFn) {
+        if (preFn !== undefined) {
           preFn(tree);
         }
 
@@ -1029,7 +1039,8 @@ describe("Validator", () => {
                el.appendChild(el.ownerDocument.createElement("foo"));
              },
              (p, tree) => {
-               const errors = p.getErrorsFor(tree.getElementsByTagName("em")[0]);
+               const errors =
+                 p.getErrorsFor(tree.getElementsByTagName("em")[0]);
                assert.equal(errors.length, 1);
                assert.equal(
                  errors[0].error.toString(),
@@ -1042,7 +1053,8 @@ describe("Validator", () => {
                el.appendChild(el.ownerDocument.createElement("foo"));
              },
              (p, tree) => {
-               const errors = p.getErrorsFor(tree.getElementsByTagName("em")[1]);
+               const errors =
+                 p.getErrorsFor(tree.getElementsByTagName("em")[1]);
                assert.equal(errors.length, 0);
              });
   });

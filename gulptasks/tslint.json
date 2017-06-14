@@ -1,6 +1,8 @@
 {
   "extends": "../tslint.json",
   "rules": {
-    "missing-jsdoc": [false, "Not needed here"]
+    "missing-jsdoc": [false, "Not needed here"],
+    "strict-boolean-expressions": false,
+    "newline-before-return": false
   }
 }

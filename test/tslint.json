@@ -1,6 +1,10 @@
 {
   "extends": "../tslint.json",
   "rules": {
-    "missing-jsdoc": [false, "Not needed here"]
+    "missing-jsdoc": [false, "Not needed here"],
+    "no-import-side-effect": [true,
+                              { "ignore-pattern": "^(chai|mocha)$" }],
+    "completed-docs": false,
+    "no-non-null-assertion": [false, "We use them too much in testing."]
   }
 }

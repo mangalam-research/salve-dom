@@ -1,4 +1,3 @@
-// tslint:disable: missing-jsdoc
 import * as Promise from "bluebird";
 import * as childProcess from "child_process";
 import * as _fs from "fs-extra";
@@ -23,11 +22,12 @@ export const mkdirpAsync = (fs as any).ensureDirAsync.bind(fs);
 export const copy = (fs as any).copyAsync.bind(fs);
 export const touchAsync = Promise.promisify(touch);
 
-export function cprp(src: string, dest: string): void {
+export function cprp(src: string, dest: string): Promise<void> {
   return copy(src, dest, { clobber: true, preserveTimestamps: true });
 }
 
-export function exec(command: string, options?: any): Promise<[string, string]> {
+export function exec(command: string,
+                     options?: any): Promise<[string, string]> {
   return new Promise<[string, string]>((resolve, reject) => {
     childProcess.exec(command, options, (err, stdout, stderr) => {
       if (err) {

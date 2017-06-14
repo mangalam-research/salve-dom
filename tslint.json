@@ -6,6 +6,7 @@
                                   {
                                     "ignore": "^(makeTest|testFile)\\(.*"
                                   }
-    ]
+                                 ],
+    "promise-function-async": false
   }
 }

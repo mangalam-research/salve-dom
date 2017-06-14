@@ -63,6 +63,7 @@ describe("EventEmitter", () => {
       const calls: string[] = [];
       emitter.addEventListener("event", () => {
         calls.push("first");
+
         return false;
       });
       emitter.addEventListener("event", () => {
@@ -115,6 +116,7 @@ describe("EventEmitter", () => {
       const executed: string[] = [];
       function generic_listener(name: string): false {
         executed.push(name);
+
         return false;
       }
       let listenerExecuted = false;
