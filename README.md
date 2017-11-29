@@ -15,11 +15,11 @@ Using
 =====
 
 The library is written in TypeScript but can be used by JavaScript code. The wed
-editor mentioned above is still implemented in ES5 and uses `salve-dom` without
-problem.
+editor mentioned above was still implemented in ES5 when it started using
+`salve-dom`, though it has since been converted to TypeScript.
 
 However, if you are using JavaScript you still need to pay attention to the
-TypeScript annotations and pay special attention to:
+TypeScript annotations and pay *special* attention to:
 
 1. What is public and what is not public in the API. Anything that the
    TypeScript type annotations do not expose to TypeScript code is private.
