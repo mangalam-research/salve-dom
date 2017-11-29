@@ -73,24 +73,22 @@ class ProgressState {
 }
 
 //
-// Note: the Validator class adds information to the Element nodes it
-// is working with by adding expando properties that start with
-// "wed_event_". This deemed acceptable here because:
+// Note: the Validator class adds information to the Element nodes it is working
+// with by adding expando properties that start with "wed_event_". This deemed
+// acceptable here because:
 //
-// * The tree on which a Validator object operates is not supposed to
-//   be open to third party software. Even if it were, the chance of a
-//   clash is small.
+// * The tree on which a Validator object operates is not supposed to be open to
+//   third party software. Even if it were, the chance of a clash is small.
 //
-// * The values of the expando properties are primitives (not objects
-//   or other elements).
+// * The values of the expando properties are primitives (not objects or other
+//   elements).
 //
-// * We don't care about browsers or situations where expando
-//   properties are not supported.
+// * We don't care about browsers or situations where expando properties are not
+//   supported.
 //
 
 //
-// These are constants. So create them once rather than over and over
-// again.
+// These are constants. So create them once rather than over and over again.
 //
 const ENTER_CONTEXT_EVENT = new Event("enterContext");
 const LEAVE_START_TAG_EVENT = new Event("leaveStartTag");
@@ -109,8 +107,8 @@ class EventIndexException extends Error {
   }
 }
 
-// This private utility function checks whether an event is possible
-// only because there is a name_pattern wildcard that allows it.
+// This private utility function checks whether an event is possible only
+// because there is a name_pattern wildcard that allows it.
 function isPossibleDueToWildcard(walker: Walker<BasePattern>,
                                  eventName: string,
                                  ns: string,
@@ -127,8 +125,8 @@ function isPossibleDueToWildcard(walker: Walker<BasePattern>,
     // Keep track of whether it ever matched anything.
     matched = matched || matches;
 
-    // We already know that it matches, and this is not merely due
-    // to a wildcard.
+    // We already know that it matches, and this is not merely due to a
+    // wildcard.
     if (matches && !namePattern.wildcardMatch(ns, name)) {
       return false;
     }
@@ -358,8 +356,7 @@ export class Validator {
   }
 
   /**
-   * Get the namespaces defined in the schema passed to the
-   * Validator.
+   * Get the namespaces defined in the schema passed to the Validator.
    *
    * @returns The namespaces known to the schema.
    */
@@ -446,8 +443,8 @@ export class Validator {
   }
 
   /**
-   * Performs one cycle of validation. "One cycle" is an arbitrarily
-   * small unit of work.
+   * Performs one cycle of validation. "One cycle" is an arbitrarily small unit
+   * of work.
    *
    * @returns False if there is no more work to be done. True otherwise.
    *
