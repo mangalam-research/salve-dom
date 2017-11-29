@@ -162,8 +162,8 @@ gulp.task("versync", "Run a version check on the code.",
 
 function runTslint(tsconfig: string, tslintConfig: string): Promise<void> {
   return spawn("./node_modules/.bin/tslint",
-               ["--type-check", "--format", "verbose", "--project",
-                tsconfig, "-c", tslintConfig],
+               ["--format", "verbose", "--project", tsconfig,
+                "-c", tslintConfig],
                { stdio: "inherit" });
 }
 

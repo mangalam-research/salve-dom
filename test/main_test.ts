@@ -627,7 +627,7 @@ describe("Validator", () => {
                testFile("multiple_namespaces_on_same_node_converted.xml"))
              .then((text) => defaultTree = parser.parse(text)));
 
-      // eslint-disable-next-line no-shadow
+      // tslint:disable-next-line:no-shadowed-variable
       function makeTest(name: string,
                         stopFn: (p: Validator,
                                  tree: Document | Element) => void,
@@ -668,7 +668,7 @@ describe("Validator", () => {
                dataTree = parser.parse(text);
              }));
 
-      // eslint-disable-next-line no-shadow
+      // tslint:disable-next-line:no-shadowed-variable
       function makeTest(name: string,
                         stopFn: (p: Validator, revealed: Reveal,
                                  tree: Document | Element) => void,

@@ -79,9 +79,9 @@ describe("EventEmitter", () => {
       emitter.addEventListener("event", (ev: any) => {
         data = ev;
       });
-      const ev = { prop: 1 };
-      emitter._emit("event", ev);
-      assert.deepEqual(data, ev);
+      const expectedEv = { prop: 1 };
+      emitter._emit("event", expectedEv);
+      assert.deepEqual(data, expectedEv);
     });
 
     it("calls only relevant listeners", () => {
