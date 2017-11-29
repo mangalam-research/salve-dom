@@ -1566,3 +1566,66 @@ export class Validator {
     return this._getWalkerAt(container, index).unresolveName(uri, name);
   }
 }
+
+/**
+ * Exception to be raised if we cannot parse a string as an XML document.
+ */
+export class ParsingError extends Error {
+  /**
+   * @param xmlErrors A string that contains the errors reported. The library
+   * here simply serializes the error document produced by the parser.
+   */
+  constructor(readonly xmlErrors: string) {
+    super("cannot parse");
+    fixPrototype(this, ParsingError);
+  }
+}
+
+// tslint:disable-next-line:no-http-string
+const XML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+const MOZILLA_NAMESPACE =
+  // tslint:disable-next-line:no-http-string
+  "http://www.mozilla.org/newlayout/xml/parsererror.xml";
+
+/**
+ * A utility function that detects whether the parsing fails and throws an error
+ * in such case.
+ *
+ * Note that if you pass a well-formed and correctly structured error document
+ * to this function, the result will look like an error, even though it was
+ * parsed properly. Given the way ``DOMParser`` reports errors, this cannot be
+ * helped.
+ *
+ * @param source The XML to parse.
+ *
+ * @param win The window from which to create a ``DOMParser``.
+ *
+ * @returns The parsed document.
+ *
+ * @throws {ParsingError} If the source cannot be parsed.
+ */
+export function safeParse(source: string, win: Window = window): Document {
+  const parser = new win.DOMParser();
+  const doc = parser.parseFromString(source, "text/xml");
+  const child = doc.firstElementChild;
+  const chromeTest = doc.querySelector("html>body>parsererror");
+
+  // A DOMParser will generate a document that contains a description of the
+  // error(s). Unfortunately, this document is not consistently generated across
+  // browsers.
+  //
+  // However, running the code through Browser Stack on Chrome, Firefox, IE
+  // 10-100, Edge, Opera, and Safari that they boil down either to the Chrome
+  // case or the Firefox case.
+  if (
+    // Firefox
+    (child !== null &&
+     child.tagName === "parsererror" &&
+     child.namespaceURI === MOZILLA_NAMESPACE) ||
+      // Chrome
+      (chromeTest !== null && chromeTest.namespaceURI === XML_NAMESPACE)) {
+    throw new ParsingError(doc.documentElement.outerHTML);
+  }
+
+  return doc;
+}

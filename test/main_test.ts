@@ -4,7 +4,8 @@
  * @copyright Mangalam Research Center for Buddhist Languages
  */
 import "chai";
-import { ErrorData, Validator, WorkingState as WS } from "dist/lib/main";
+import { ErrorData, ParseError, safeParse, Validator,
+         WorkingState as WS } from "dist/lib/main";
 import * as main from "dist/lib/main";
 import "mocha";
 import * as salve from "salve";
@@ -1117,6 +1118,17 @@ describe("Validator", () => {
                      "foo:teiHeader");
       });
     });
+  });
+});
+
+describe("safeParse", () => {
+  it("reports errors", () => {
+    assert.throws(() => safeParse("<>"), ParseError);
+  });
+
+  it("parses", () => {
+    const doc = safeParse("<div/>");
+    assert.isNotNull(doc.firstChild);
   });
 });
 
