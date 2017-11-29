@@ -43,11 +43,6 @@
       "": {
         defaultExtension: "js",
       },
-      "/base/test/": {
-        map: {
-          "./util": "./util_browser",
-        },
-      }
     },
     packageConfigPaths: [
       "/base/build/dist/package.json",

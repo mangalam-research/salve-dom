@@ -1,24 +1,18 @@
-import * as fs from "fs";
-import * as jsdom from "jsdom";
-
 export interface Parser {
   parse(data: string): Document;
 }
 
-export class JSDomParser implements Parser {
+export class MyDOMParser implements Parser {
   parse(data: string): Document {
-    return jsdom.jsdom(data, {
-      parsingMode: "xml",
-    });
+    return new DOMParser().parseFromString(data, "text/xml");
   }
 }
 
 export function getParser(): Parser {
-  return new JSDomParser();
+  return new MyDOMParser();
 }
 
 export function getEmptyTree(): Element {
-  const document = jsdom.jsdom("");
   const frag = document.createDocumentFragment();
   const emptyTree = document.createElement("div");
   frag.appendChild(emptyTree);
@@ -27,15 +21,5 @@ export function getEmptyTree(): Element {
 }
 
 export function fetchText(name: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    fs.readFile(name, (err: Error, data: Buffer) => {
-      if (err != null) {
-        reject(err);
-
-        return;
-      }
-
-      resolve(data.toString());
-    });
-  });
+  return SystemJS.import(`${name}!text`);
 }
