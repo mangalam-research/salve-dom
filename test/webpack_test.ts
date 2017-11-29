@@ -16,6 +16,19 @@ function testFile(name: string): string {
   return `build/test-files/${name}`;
 }
 
+// We cannot trivially move this to util and share the code with the regular
+// tests. The imports for the types used have to be done differently. Or we have
+// to ditch precise type annotations.
+export function onCompletion(p: Validator, cb: () => void): void {
+  p.events.addEventListener("state-update", (state: main.WorkingStateData) => {
+    if (!(state.state === main.WorkingState.VALID ||
+          state.state === main.WorkingState.INVALID)) {
+      return;
+    }
+    cb();
+  });
+}
+
 describe("Webpack test", () => {
   let parser: util.Parser;
   let emptyTree: Element;
@@ -45,13 +58,11 @@ describe("Webpack test", () => {
     const p = makeValidator(genericTree.cloneNode(true) as Document);
 
     // Manipulate stop so that we know when the work is done.
-    const oldStop = p.stop;
-    p.stop = function stop(): void {
-      oldStop.call(p);
+    onCompletion(p, () => {
       assert.equal(p.getWorkingState().state, main.WorkingState.VALID);
       assert.equal(p.errors.length, 0);
       done();
-    };
+    });
 
     p.start();
   });

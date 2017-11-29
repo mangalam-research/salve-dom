@@ -185,7 +185,7 @@ gulp.task("test", "Run the tests.", ["default", "tslint", "versync", "karma"]);
 gulp.task("default", ["tsc", "copy"]);
 
 let packname: string;
-gulp.task("pack", "Make an npm.", ["webpack"],
+gulp.task("pack", "Make an npm.", ["test", "karma-webpack"],
           () => execFile("npm", ["pack", "dist"], { cwd: "build" })
           .then((result) => {
             packname = result.stdout.trim();
