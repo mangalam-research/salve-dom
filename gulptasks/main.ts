@@ -1,20 +1,17 @@
 // tslint:disable: missing-jsdoc
 import { ArgumentParser } from "argparse";
 import * as del from "del";
-import * as es from "event-stream";
 import * as originalGulp from "gulp";
 import * as help from "gulp-help";
 import * as gulpNewer from "gulp-newer";
-import * as sourcemaps from "gulp-sourcemaps";
-import * as ts from "gulp-typescript";
 import * as gutil from "gulp-util";
 import * as path from "path";
 import * as versync from "versync";
 import * as webpack from "webpack";
 
 import * as webpackConfig from "../webpack.config";
-import { cprp, exec, execFile, existsInFile, fs, mkdirpAsync, newer,
-         spawn, touchAsync } from "./util";
+import { cprp, exec, execFile, execFileAndReport, existsInFile, fs, mkdirpAsync,
+         newer, spawn, touchAsync } from "./util";
 
 const gulp = help(originalGulp);
 
@@ -40,32 +37,13 @@ parser.addArgument(["target"], {
 
 const globalOptions = parser.parseArgs(process.argv.slice(2));
 
-const project = ts.createProject("src/tsconfig.json");
-gulp.task("tsc", "Typescript compilation", () => {
-  // The .once nonsense is to work around a gulp-typescript bug
-  //
-  // See: https://github.com/ivogabe/gulp-typescript/issues/295
-  //
-  // For the fix see:
-  // tslint:disable-next-line:max-line-length
-  // https://github.com/ivogabe/gulp-typescript/issues/295#issuecomment-197299175
-  //
-  const result = project.src()
-    .pipe(sourcemaps.init({ loadMaps: true }))
-    .pipe(project())
-    .once("error", function onError(this: any): void {
-      // tslint:disable-next-line: no-invalid-this
-      this.once("finish", () => {
-        process.exit(1);
-      });
-    });
+function tsc(tsconfigPath: string, dest: string): Promise<void> {
+  return execFileAndReport("./node_modules/.bin/tsc", ["-p", tsconfigPath,
+                                                       "--outDir", dest]);
+}
 
-  const dest = "build/dist/lib";
-  return es.merge(result.js
-                  .pipe(sourcemaps.write("."))
-                  .pipe(gulp.dest(dest)),
-                  result.dts.pipe(gulp.dest(dest)));
-});
+gulp.task("tsc", "Typescript compilation",
+          () => tsc("src/tsconfig.json", "build/dist/lib"));
 
 gulp.task("copy", () => {
   const dest = "build/dist/";
@@ -209,8 +187,8 @@ gulp.task("default", ["tsc", "copy"]);
 let packname: string;
 gulp.task("pack", "Make an npm.", ["webpack"],
           () => execFile("npm", ["pack", "dist"], { cwd: "build" })
-          .then(([_packname]) => {
-            packname = _packname.trim();
+          .then((result) => {
+            packname = result.stdout.trim();
           }));
 
 gulp.task("install-test", ["pack"], async () => {

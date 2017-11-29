@@ -1,4 +1,5 @@
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
+import { execFile } from "child-process-promise";
 import * as childProcess from "child_process";
 import * as _fs from "fs-extra";
 import * as gulp from "gulp";
@@ -13,14 +14,16 @@ declare module "fs-extra" {
 }
 
 function promisifyFS<T>(x: T): T {
-  return Promise.promisifyAll(x) as T;
+  return Bluebird.promisifyAll(x) as T;
 }
 
 export const fs = promisifyFS(_fs);
 
 export const mkdirpAsync = (fs as any).ensureDirAsync.bind(fs);
 export const copy = (fs as any).copyAsync.bind(fs);
-export const touchAsync = Promise.promisify(touch);
+export const touchAsync = Bluebird.promisify(touch);
+
+export { execFile };
 
 export function cprp(src: string, dest: string): Promise<void> {
   return copy(src, dest, { clobber: true, preserveTimestamps: true });
@@ -30,20 +33,6 @@ export function exec(command: string,
                      options?: any): Promise<[string, string]> {
   return new Promise<[string, string]>((resolve, reject) => {
     childProcess.exec(command, options, (err, stdout, stderr) => {
-      if (err) {
-        gutil.log(stdout);
-        gutil.log(stderr);
-        reject(err);
-      }
-      resolve([stdout, stderr]);
-    });
-  });
-}
-
-export function execFile(command: string, args: string[], options: any):
-Promise<[string, string]> {
-  return new Promise<[string, string]>((resolve, reject) => {
-    childProcess.execFile(command, args, options, (err, stdout, stderr) => {
       if (err) {
         gutil.log(stdout);
         gutil.log(stderr);
@@ -106,4 +95,30 @@ export function spawn(cmd: string, args: string[], options: {}): Promise<void> {
       resolve();
     });
   });
+}
+
+/**
+ * Why use this over spawn with { stdio: "inherit" }? If you use this function,
+ * the results will be shown in one shot, after the process exits, which may
+ * make things tidier.
+ *
+ * However, not all processes are amenable to this. When running Karma, for
+ * instance, it is desirable to see the progress "live" and so using spawn is
+ * better.
+ */
+export function execFileAndReport(
+  file: string,
+  args?: string[],
+  options?: childProcess.ExecFileOptionsWithStringEncoding): Promise<void> {
+  return execFile(file, args, options)
+    .then((result) => {
+      if (result.stdout) {
+        gutil.log(result.stdout);
+      }
+    }, (err) => {
+      if (err.stdout) {
+        gutil.log(err.stdout);
+      }
+      throw err;
+    });
 }
