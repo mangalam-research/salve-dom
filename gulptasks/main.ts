@@ -1,6 +1,5 @@
 // tslint:disable: missing-jsdoc
 import { ArgumentParser } from "argparse";
-import * as Promise from "bluebird";
 import * as del from "del";
 import * as es from "event-stream";
 import * as originalGulp from "gulp";
@@ -83,27 +82,27 @@ gulp.task(
   "convert-test-files",
   "Convert the test files to what is needed by Mocha.",
   (callback) => {
-    const promises: Promise<any>[] = [];
+    const promises: Promise<void>[] = [];
     gulp.src("test/data/**", { base: "test/data", read: false, nodir: true })
       .on("data", (file: any) => {
-        const p = Promise.coroutine(function *dataPromise(): any {
+        const p = (async () => {
           const ext = path.extname(file.relative);
           const destName = path.join(
             "build/test-files",
             file.relative.substring(0, file.relative.length - ext.length));
           const dest = `${destName}_converted.xml`;
 
-          const tei = yield existsInFile(file.path,
+          const tei = await existsInFile(file.path,
                                          /http:\/\/www.tei-c.org\/ns\/1.0/);
 
           let isNewer;
           let xsl;
           if (tei) {
             xsl = "test/xml-to-xml-tei.xsl";
-            isNewer = yield newer([file.path, xsl], dest);
+            isNewer = await newer([file.path, xsl], dest);
           }
           else {
-            isNewer = yield newer(file.path, dest);
+            isNewer = await newer(file.path, dest);
           }
 
           if (!isNewer) {
@@ -111,18 +110,22 @@ gulp.task(
           }
 
           if (tei) {
-            yield exec(
+            await exec(
               `${globalOptions.saxon} -s:${file.path} -o:${dest} -xsl:${xsl}`);
           }
           else {
-            yield mkdirpAsync(path.dirname(dest));
-            yield cprp(file.path, dest);
+            await mkdirpAsync(path.dirname(dest));
+            await cprp(file.path, dest);
           }
         })();
         promises.push(p);
       })
       .on("end", () => {
-        Promise.all(promises).asCallback(callback);
+        // tslint:disable-next-line:no-floating-promises
+        Promise.all(promises).then(() => {
+          // tslint:disable-next-line:no-non-null-assertion
+          callback!();
+        }, callback);
       });
   });
 
@@ -210,14 +213,14 @@ gulp.task("pack", "Make an npm.", ["webpack"],
             packname = _packname.trim();
           }));
 
-gulp.task("install-test", ["pack"], Promise.coroutine(function *install(): any {
+gulp.task("install-test", ["pack"], async () => {
   const testDir = "build/install_dir";
-  yield del(testDir);
-  yield fs.mkdirAsync(testDir);
-  yield fs.mkdirAsync(path.join(testDir, "node_modules"));
-  yield execFile("npm", ["install", `../${packname}`], { cwd: testDir });
-  yield del(testDir);
-}) as any);
+  await del(testDir);
+  await fs.mkdirAsync(testDir);
+  await fs.mkdirAsync(path.join(testDir, "node_modules"));
+  await execFile("npm", ["install", `../${packname}`], { cwd: testDir });
+  await del(testDir);
+});
 
 gulp.task("publish", "Publish the package.", ["install-test"],
           () => execFile("npm", ["publish", packname], { cwd: "build" }));
@@ -226,41 +229,36 @@ gulp.task("publish", "Publish the package.", ["install-test"],
 // generates links to source based on the latest commit in effect when it is
 // run. So if a commit happened between the time the doc was generated last, and
 // now, we need to regenerate the docs.
-gulp.task("typedoc", "Generate the documentation", ["tslint"],
-          Promise.coroutine(function *task(): any {
-            const sources = ["src/**/*.ts"];
-            const stamp = "build/api.stamp";
-            const hashPath = "./build/typedoc.hash.txt";
+gulp.task("typedoc", "Generate the documentation", ["tslint"], async () => {
+  const sources = ["src/**/*.ts"];
+  const stamp = "build/api.stamp";
+  const hashPath = "./build/typedoc.hash.txt";
 
-            const [savedHash, [currentHash]] = yield Promise.all(
-              [fs.readFileAsync(hashPath)
-               .then(hash => hash.toString())
-               .catch(() => undefined),
-               execFile("git", ["rev-parse", "--short", "HEAD"], {})
-               .then(([stdout]) => stdout),
-              ]);
+  const [savedHash, [currentHash]] = await Promise.all(
+    [fs.readFileAsync(hashPath).then(hash => hash.toString())
+     .catch(() => undefined),
+     execFile("git", ["rev-parse", "--short", "HEAD"], {})
+     .then(({ stdout }) => stdout),
+    ]);
 
-            if ((currentHash === savedHash) && !(yield newer(sources, stamp))) {
-              gutil.log("No change, skipping typedoc.");
-              return;
-            }
+  if ((currentHash === savedHash) && !(await newer(sources, stamp))) {
+    gutil.log("No change, skipping typedoc.");
+    return;
+  }
 
-            const tsoptions = [
-              "--out", "./build/api",
-              "--name", "salve-dom",
-              "--tsconfig", "./src/tsconfig.json",
-              "--listInvalidSymbolLinks",
-            ];
+  const tsoptions = [
+    "--out", "./build/api", "--name", "salve-dom",
+    "--tsconfig", "./src/tsconfig.json", "--listInvalidSymbolLinks",
+  ];
 
-            if (!globalOptions.doc_private) {
-              tsoptions.push("--excludePrivate");
-            }
+  if (!globalOptions.doc_private) {
+    tsoptions.push("--excludePrivate");
+  }
 
-            yield spawn("./node_modules/.bin/typedoc", tsoptions,
-                        { stdio: "inherit" });
+  await spawn("./node_modules/.bin/typedoc", tsoptions, { stdio: "inherit" });
 
-            yield Promise.all([fs.writeFileAsync(hashPath, currentHash),
-                               touchAsync(stamp)]);
-          }) as any);
+  await Promise.all([fs.writeFileAsync(hashPath, currentHash),
+                     touchAsync(stamp)]);
+});
 
 gulp.task("clean", "Remove the build.", () => del(["build"]));
