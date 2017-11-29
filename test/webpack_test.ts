@@ -31,14 +31,11 @@ export function onCompletion(p: Validator, cb: () => void): void {
 
 describe("Webpack test", () => {
   let parser: util.Parser;
-  let emptyTree: Element;
-
   let grammar: salve.Grammar;
   let genericTree: Document;
 
   before(() => {
     parser = util.getParser();
-    emptyTree = util.getEmptyTree();
 
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")

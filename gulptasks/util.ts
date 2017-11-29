@@ -13,7 +13,7 @@ declare module "fs-extra" {
   export function writeFileAsync(path: string, content: string): Promise<void>;
 }
 
-function promisifyFS<T>(x: T): T {
+function promisifyFS<T extends object>(x: T): T {
   return Bluebird.promisifyAll(x) as T;
 }
 
