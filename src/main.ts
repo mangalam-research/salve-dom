@@ -261,8 +261,8 @@ export class Validator {
   private _walkerCache: {[key: number]: GrammarWalker} = Object.create(null);
   private _walkerCacheMax: number = -1;
   private readonly _prefix: string = "salveDom";
-  // The distance between walkers under which we skip saving a
-  // walker in the cache.
+  // The distance between walkers under which we skip saving a walker in the
+  // cache.
   private _walkerCacheGap: number = 100;
   private readonly _events: EventEmitter<Events> = new EventEmitter<Events>();
   public readonly events: Consuming<Events>;
@@ -291,8 +291,8 @@ export class Validator {
     }
 
     this._curEl = this.root;
-    // This prevents an infinite loop when speculativelyValidate is
-    // called to validate a text node.
+    // This prevents an infinite loop when speculativelyValidate is called to
+    // validate a text node.
     this._setNodeProperty(this._curEl, "EventIndexAfterStart",
                           this._validationEvents.length);
     this._setWorkingState(WorkingState.INCOMPLETE, 0);
@@ -308,11 +308,10 @@ export class Validator {
    * Function allowing to get a custom properties set on ``Node`` objects by
    * this class.
    */
-  getNodeProperty<T extends CustomNodeProperty>(
-    node: Node,
-    key: T): CustomNodeProperties[T] | undefined {
-      return (node as any)[this.makeKey(key)] as CustomNodeProperties[T];
-    }
+  getNodeProperty<T extends CustomNodeProperty>(node: Node, key: T):
+  CustomNodeProperties[T] | undefined {
+    return (node as any)[this.makeKey(key)] as CustomNodeProperties[T];
+  }
 
   /**
    * Function allowing to set a custom properties set on ``Node`` objects by
@@ -527,8 +526,8 @@ export class Validator {
           ename = new EName("", tagName);
         }
 
-        // Check whether this element is going to be allowed only
-        // due to a wildcard.
+        // Check whether this element is going to be allowed only due to a
+        // wildcard.
         this._setPossibleDueToWildcard(curEl, walker, "enterStartTag",
                                        ename.ns, ename.name);
         this._fireAndProcessEvent(
@@ -794,8 +793,8 @@ export class Validator {
   }
 
   /**
-   * Sets the working state of the validator. Emits a "state-update"
-   * event if the state has changed.
+   * Sets the working state of the validator. Emits a "state-update" event if
+   * the state has changed.
    *
    * @param newState The new state of the validator.
    *
@@ -890,8 +889,7 @@ export class Validator {
   /**
    * Fires all the attribute events for a given element.
    */
-  private _fireAttributeEvents(walker: GrammarWalker,
-                               el: Element): void {
+  private _fireAttributeEvents(walker: GrammarWalker, el: Element): void {
     // Find all attributes, fire events for them.
     const attributes = el.attributes;
     // tslint:disable-next-line:prefer-for-of
@@ -1004,16 +1002,16 @@ export class Validator {
                       "node which is not an element node");
     }
 
-    // Set these to reasonable defaults. The rest of the code is
-    // dedicated to changing these values to those necessary depending
-    // on specifics of what is passed to the method.
+    // Set these to reasonable defaults. The rest of the code is dedicated to
+    // changing these values to those necessary depending on specifics of what
+    // is passed to the method.
     let toInspect = container;
     let dataKey: CustomNodeProperty = "EventIndexAfter";
 
-    // This function could be called with container === root if the
-    // document is empty or if the user has the caret before the start
-    // tag of the first element of the actual structure we want to
-    // validate or after the end tag of that element.
+    // This function could be called with container === root if the document is
+    // empty or if the user has the caret before the start tag of the first
+    // element of the actual structure we want to validate or after the end tag
+    // of that element.
     if (container === this.root && index <= 0) {
       if (attributes) {
         dataKey = "EventIndexAfterAttributes";
@@ -1423,8 +1421,7 @@ export class Validator {
    * false.
    */
   speculativelyValidateFragment(container: Node, index: number,
-                                toParse: Element):
-  ErrorData[] | false {
+                                toParse: Element): ErrorData[] | false {
     // This is useful for pure-JS code that may be calling this.
     if (toParse.nodeType !== Node.ELEMENT_NODE) {
       throw new Error("toParse is not an element");
