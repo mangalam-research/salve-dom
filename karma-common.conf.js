@@ -52,7 +52,7 @@ module.exports = function(config) {
     browserStack: {
       project: "salve-dom",
     },
-    browsers: ["Chrome", "Firefox"],
+    browsers: ["ChromeHeadless", "FirefoxHeadless"],
     customLaunchers: {
       ChromeWin: {
         base: "BrowserStack",
