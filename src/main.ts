@@ -1620,7 +1620,11 @@ export class ParsingError extends Error {
    * here simply serializes the error document produced by the parser.
    */
   constructor(readonly xmlErrors: string) {
-    super("cannot parse");
+    super();
+    const err: Error = new Error("cannot parse");
+    this.name = "ParsingError";
+    this.stack = err.stack;
+    this.message = err.message;
     fixPrototype(this, ParsingError);
   }
 }
@@ -1650,8 +1654,23 @@ const MOZILLA_NAMESPACE =
  */
 export function safeParse(source: string, win: Window = window): Document {
   const parser = new win.DOMParser();
-  const doc = parser.parseFromString(source, "text/xml");
-  const child = doc.firstElementChild;
+  let doc: Document;
+  try {
+    doc = parser.parseFromString(source, "text/xml");
+  }
+  catch (ex) {
+    // On IE10/11 bad source will cause a SyntaxError.
+    if (ex.name !== "SyntaxError" || ex.code !== 12) {
+      throw ex;
+    }
+
+    throw new ParsingError("no error information available");
+  }
+
+  let child = doc.firstChild as Element;
+  while (child !== null && child.nodeType !== Node.ELEMENT_NODE) {
+    child = child.nextSibling as Element;
+  }
   const chromeTest = doc.querySelector("html>body>parsererror");
 
   // A DOMParser will generate a document that contains a description of the

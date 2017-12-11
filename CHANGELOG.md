@@ -1,4 +1,20 @@
-1.4.0:
+2.0.0:
+
+ - Fixed errors with ``safeParse`` on IE11 and Edge.
+
+   We used to use ``karma-typescript-preprocessor``, which is awful. Among other
+   things, it would not report compilation errors but would let Karma run tests
+   on code that does not compile cleanly. This resulted in errors in
+   ``safeParse`` being hidden. We switched to a good preprocessor, and fixed the
+   errors.
+
+ - Dropped support for IE10. It was supported because it was a no-cost
+   proposition. Adding ``safeParse`` requires custom exceptions, which cannot be
+   readily created on IE10 with TypeScript. (See
+   [this](https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work).)
+
+   Since IE10 has reached end-of-life a while ago, we cannot justify spending
+   time fixing issues that occur only on IE10.
 
  - Prevent error duplication.
 

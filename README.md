@@ -97,8 +97,8 @@ Browser Requirements
 
 salve-dom passes its test suite on:
 
-* Chrome, Firefox, IE 10/11, Edge, Opera and Safari form Mavericks onwards. It
-  has been tested on "relatively recent versions".
+* Chrome, Firefox, IE 11, Edge, Opera and Safari form Mavericks onwards. It has
+  been tested on "relatively recent versions".
 
 Your browser must have support for ``firstElementChild`` and its associated
 properties on nodes that implement the ``Document``, ``Element`` and
