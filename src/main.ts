@@ -1249,7 +1249,7 @@ export class Validator {
     const max = this._walkerCacheMax;
 
     let walker = cache[eventIndex];
-    if (walker) {
+    if (walker !== undefined) {
       return walker;
     }
 
@@ -1279,12 +1279,12 @@ export class Validator {
       walker = cache[searchIx];
     }
     else {
-      while (!walker && --searchIx >= 0) {
+      while (walker === undefined && --searchIx >= 0) {
         walker = cache[searchIx];
       }
     }
 
-    if (walker) {
+    if (walker !== undefined) {
       walker = walker.clone();
     }
     else {
