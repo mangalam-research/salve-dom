@@ -1,3 +1,21 @@
+1.4.0:
+
+ - Prevent error duplication.
+
+   There was an issue whereby if you used any of the methods that call
+   ``_getWalkerAt``, it would be possible to get duplicated errors. One
+   prominent example was when using ``possibleAt``. If producing the result
+   required replaying events then any event generating an error would generate
+   the error anew, and a duplicate error would be recorded. (With an
+   accompanying duplicate event.)
+
+   salve-dom now checks whether an error was previously seen, and will not
+   record it and generate a new event if it has already been seen.
+
+   Implementation note: it would be tempting to declare that while
+   ``_getWalkerAt`` runs, no errors should be processed. This would eliminate
+   the need to detect duplicates, but it would create a slew of other issues.
+
 1.3.0:
 
  - Added ``safeParse``.

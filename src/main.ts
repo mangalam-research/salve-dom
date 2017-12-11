@@ -182,6 +182,7 @@ export interface CustomNodeProperties {
   "EventIndexBeforeAttributes": number;
   "EventIndexAfterAttributes": number;
   "PossibleDueToWildcard": boolean;
+  "ErrorId": number;
 }
 
 export type CustomNodeProperty = keyof CustomNodeProperties;
@@ -247,6 +248,7 @@ export class Validator {
   private _timeoutId: number | undefined;
   private _resetting: boolean = false;
   private _errors: ErrorData[] = [];
+  private _errorsSeen: Record<string, boolean> = Object.create(null);
   private readonly _boundWrapper: Function = this._workWrapper.bind(this);
 
   // Validation state
@@ -331,6 +333,7 @@ export class Validator {
       "EventIndexBeforeAttributes",
       "EventIndexAfterAttributes",
       "PossibleDueToWildcard",
+      "ErrorId",
     ];
     for (const key of keys) {
       delete (node as any)[this.makeKey(key)];
@@ -778,6 +781,7 @@ export class Validator {
     this._curEl = this.root;
     this._partDone = 0;
     this._errors = [];
+    this._errorsSeen = Object.create(null);
     this._walkerCache = Object.create(null);
     this._walkerCacheMax = -1;
     /**
@@ -873,17 +877,60 @@ export class Validator {
    * @emits module:validator~Validator#error
    */
   protected _processError(error: ErrorData): void {
-    this._errors.push(error);
     /**
-     * Tells the listener that an error has occurred.
+     * We don't make this a method because it should only be called from
+     * ``_processError``. The way we generate new ID values works **only**
+     * because we push a new error in the list when there's no ID already set.
      *
-     * @event module:validator~Validator#error
-     * @type {Object}
-     * @property {Object} error The validation error.
-     * @property {Node} node The node where the error occurred.
-     * @property {integer} index The index in this node.
+     * Ensure the node has an error ID and return it. The error ID is the number
+     * set on the ``ErrorId`` property. If the node has no ID set yet, we assign
+     * one and return the new value. Otherwise, the old value is returned.
+     *
+     * @param node The node of interest.
+     *
+     * @returns The error ID.
      */
-    this._events._emit("error", error);
+    const ensureErrorId = (nodeGettingId: Node) => {
+      let oldId = this.getNodeProperty(nodeGettingId, "ErrorId");
+      if (oldId === undefined) {
+        // The length of the error array at the time of first calling this
+        // function is good enough to serve as an ID.
+        oldId = this._errors.length;
+        this._setNodeProperty(nodeGettingId, "ErrorId", oldId);
+      }
+
+      return oldId;
+    };
+
+    // We must first check whether we've seen this error before, and avoid
+    // recording it again if we've seen it. This could happen when
+    // ``_getWalkerAt`` is used, because the validator may repeat firing events
+    // and processing the associated errors. We cannot just turn off error
+    // processing when ``_getWalkerAt`` is used because it may be used in cases
+    // where we are legitimately advancing the state of validation (rather than
+    // going over old stuff).
+
+    const node = error.node;
+    const errorId = node == null ? "" : String(ensureErrorId(node));
+
+    const key = `${errorId},${error.error.toString()}`;
+    const alreadySeen = this._errorsSeen[key];
+
+    // We want to do a strict compare with true to handle ``undefined``.
+    if (alreadySeen !== true) {
+      this._errorsSeen[key] = true;
+      this._errors.push(error);
+      /**
+       * Tells the listener that an error has occurred.
+       *
+       * @event module:validator~Validator#error
+       * @type {Object}
+       * @property {Object} error The validation error.
+       * @property {Node} node The node where the error occurred.
+       * @property {integer} index The index in this node.
+       */
+      this._events._emit("error", error);
+    }
   }
 
   /**

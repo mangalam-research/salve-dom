@@ -356,26 +356,50 @@ describe("Validator", () => {
   // Testing possibleAt also tests _validateUpTo because it depends on that
   // function.
   describe("possibleAt", () => {
+    let badTree: Document;
+
+    before(() => {
+      badTree = genericTree.cloneNode(true) as Document;
+      const em = badTree.getElementsByTagName("em")[0];
+      em.setAttribute("xxx", "x");
+    });
+
     function makeTest(name: string,
                       stopFn: (p: Validator, tree: Document | Element) => void,
-                      top?: Document | Element,
+                      top?: Document | Element | (() => Document | Element),
                       only: boolean = false): void {
       (only ? it.only : it)(name, () => {
         // tslint:disable-next-line:strict-boolean-expressions
-        const tree = top || genericTree.cloneNode(true) as Document;
+        if (top instanceof Function) {
+          top = top();
+        }
+        const tree =
+          top !== undefined ? top : genericTree.cloneNode(true) as Document;
         const p = new Validator(grammar, tree);
         stopFn(p, tree);
       });
     }
 
-    makeTest(
-      "empty document, at root", (p) => {
-        const evs = p.possibleAt(emptyTree, 0);
-        assert.sameMembers(
-          evs.toArray(),
-          [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
-      },
-      emptyTree);
+    makeTest("empty document, at root", (p) => {
+      const evs = p.possibleAt(emptyTree, 0);
+      assert.sameMembers(
+        evs.toArray(),
+        [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
+    },
+             emptyTree);
+
+    // There was an earlier problem by which using _getWalkerAt could
+    // cause errors to get recorded more than once.
+    makeTest("does not duplicate errors", (p, tree) => {
+      assert.equal(p.errors.length, 0);
+      const em = badTree.getElementsByTagName("em")[0];
+      const xxx = em.getAttributeNode("xxx")!;
+      p.possibleAt(xxx, 0);
+      assert.equal(p.errors.length, 1);
+      p.possibleAt(xxx, 1);
+      assert.equal(p.errors.length, 1);
+    },
+             () => badTree);
 
     makeTest("with actual contents, at root", (p, tree) => {
       const evs = p.possibleAt(tree, 0);
