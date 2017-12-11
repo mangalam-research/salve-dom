@@ -39,10 +39,15 @@ module.exports = function(config) {
       "test/**/*.ts": ["typescript"],
     },
     typescriptPreprocessor: {
-      options: {
-        project: "./test/tsconfig.json",
+      tsconfigPath: "./test/tsconfig.json",
+      compilerOptions: {
+        // eslint-disable-next-line global-require
+        typescript: require("typescript"),
+        sourceMap: false,
+        // We have to have them inline for the browser to find them.
+        inlineSourceMap: true,
+        inlineSources: true,
       },
-      transformPath: (path) => path.replace(/\.ts$/, ".js"),
     },
     reporters: ["progress"],
     port: 9876,
