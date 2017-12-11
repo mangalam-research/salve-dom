@@ -4,7 +4,7 @@
  * @copyright Mangalam Research Center for Buddhist Languages
  */
 import "chai";
-import { ErrorData, ParseError, safeParse, Validator,
+import { ErrorData, ParsingError, safeParse, Validator,
          WorkingState as WS } from "dist/lib/main";
 import * as main from "dist/lib/main";
 import "mocha";
@@ -1123,7 +1123,7 @@ describe("Validator", () => {
 
 describe("safeParse", () => {
   it("reports errors", () => {
-    assert.throws(() => safeParse("<>"), ParseError);
+    assert.throws(() => safeParse("<>"), ParsingError);
   });
 
   it("parses", () => {
