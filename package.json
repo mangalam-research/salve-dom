@@ -70,6 +70,6 @@
     "webpack": "^3.8.1"
   },
   "dependencies": {
-    "salve": "^4.1.2"
+    "salve": "^4.3.0"
   }
 }
