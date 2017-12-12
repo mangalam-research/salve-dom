@@ -55,7 +55,11 @@ describe("Validator", () => {
   let multipleNamespacesTree: Document;
   let percentToParseTree: Document;
 
-  before(() => {
+  before(function before(): Promise<void> {
+    // We have a high timeout here because IE11 on Browser Stack often takes
+    // its sweet old time here.
+    // tslint:disable-next-line:no-invalid-this
+    this.timeout(4000);
     parser = util.getParser();
     emptyTree = util.getEmptyTree();
 
@@ -70,7 +74,8 @@ describe("Validator", () => {
         .then((text) => percentToParseTree = parser.parse(text)),
       util.fetchText(testFile("to_parse_converted.xml"))
         .then((text) => genericTree = parser.parse(text)),
-    ]);
+      // tslint:disable-next-line:no-empty
+    ]).then(() => {});
   });
 
   const settings: (keyof main.Options)[] =
