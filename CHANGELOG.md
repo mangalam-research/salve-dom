@@ -1,3 +1,8 @@
+2.0.1:
+
+ - Fixed an error with ``safeParse``. If a document was partially parsable, it
+   would not detect the parsing error.
+
 2.0.0:
 
  - Fixed errors with ``safeParse`` on IE11 and Edge.

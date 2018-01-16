@@ -1155,6 +1155,10 @@ describe("safeParse", () => {
     assert.throws(() => safeParse("<>"), ParsingError);
   });
 
+  it("reports errors on partial documents", () => {
+    assert.throws(() => safeParse("<moo>"), ParsingError);
+  });
+
   it("parses", () => {
     const doc = safeParse("<div/>");
     assert.isNotNull(doc.firstChild);

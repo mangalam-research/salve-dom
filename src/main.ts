@@ -1667,12 +1667,6 @@ export function safeParse(source: string, win: Window = window): Document {
     throw new ParsingError("no error information available");
   }
 
-  let child = doc.firstChild as Element;
-  while (child !== null && child.nodeType !== Node.ELEMENT_NODE) {
-    child = child.nextSibling as Element;
-  }
-  const chromeTest = doc.querySelector("html>body>parsererror");
-
   // A DOMParser will generate a document that contains a description of the
   // error(s). Unfortunately, this document is not consistently generated across
   // browsers.
@@ -1682,11 +1676,11 @@ export function safeParse(source: string, win: Window = window): Document {
   // case or the Firefox case.
   if (
     // Firefox
-    (child !== null &&
-     child.tagName === "parsererror" &&
-     child.namespaceURI === MOZILLA_NAMESPACE) ||
+    (doc.getElementsByTagNameNS(MOZILLA_NAMESPACE, "parsererror")[0] !==
+     undefined) ||
       // Chrome
-      (chromeTest !== null && chromeTest.namespaceURI === XML_NAMESPACE)) {
+      (doc.getElementsByTagNameNS(XML_NAMESPACE, "parsererror")[0] !==
+       undefined)) {
     throw new ParsingError(doc.documentElement.outerHTML);
   }
 
