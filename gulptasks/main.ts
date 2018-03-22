@@ -134,11 +134,17 @@ gulp.task(
 //
 // https://github.com/TypeStrong/ts-node/issues/286
 //
-function runKarma(options: string[]): Promise<any> {
+function runKarma(options: string[], browsers?: string[]): Promise<any> {
   // We cannot let it be set to ``null`` or ``undefined``.
-  if (globalOptions.browsers) {
-    options = options.concat("--browsers", globalOptions.browsers);
+  if (browsers === undefined) {
+    if (globalOptions.browsers) {
+      options = options.concat("--browsers", globalOptions.browsers);
+    }
   }
+  else {
+    options = options.concat("---browsers", browsers);
+  }
+
   return spawn("./node_modules/.bin/karma", options, { stdio: "inherit" });
  }
 
@@ -148,11 +154,8 @@ gulp.task("karma", "Run the karma tests.", ["default", "convert-test-files"],
 gulp.task(
   "karma-webpack", "Run the karma test that tests the webpack bundle.",
   ["webpack", "convert-test-files"],
-  () => {
-    // We override whatever was passed in --browsers.
-    globalOptions.browsers = ["Chrome"];
-    return runKarma(["start", "karma-webpack.conf.js", "--single-run"]);
-  });
+  () => runKarma(["start", "karma-webpack.conf.js", "--single-run"],
+                 ["ChromeHeadless"]));
 
 gulp.task("versync", "Run a version check on the code.",
           () => versync.run({
