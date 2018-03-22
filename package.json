@@ -1,6 +1,6 @@
 {
   "name": "salve-dom",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A library for validating DOM trees according to a Relax NG schema.",
   "main": "salve-dom.js",
   "types": "lib/main.d.ts",
@@ -70,6 +70,6 @@
     "webpack": "^3.8.1"
   },
   "dependencies": {
-    "salve": "^4.3.0"
+    "salve": ">=4.3.0 <7"
   }
 }
