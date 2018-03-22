@@ -11,6 +11,7 @@ declare module "fs-extra" {
   export function mkdirAsync(dir: string): Promise<any>;
   export function readFileAsync(path: string): Promise<Buffer>;
   export function writeFileAsync(path: string, content: string): Promise<void>;
+  export function renameAsync(fromPath: string, toPath: string): Promise<void>;
 }
 
 function promisifyFS<T extends object>(x: T): T {

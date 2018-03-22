@@ -186,9 +186,12 @@ gulp.task("default", ["tsc", "copy"]);
 
 let packname: string;
 gulp.task("pack", "Make an npm.", ["test", "karma-webpack"],
-          () => execFile("npm", ["pack", "dist"], { cwd: "build" })
+          () => execFile("npm", ["pack"], { cwd: "build/dist" })
           .then((result) => {
-            packname = result.stdout.trim();
+            const { stdout } = result;
+            packname = stdout.trim();
+            return fs.renameAsync(`build/dist/${packname}`,
+                                  `build/${packname}`);
           }));
 
 gulp.task("install-test", ["pack"], async () => {
