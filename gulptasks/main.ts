@@ -7,9 +7,7 @@ import * as gutil from "gulp-util";
 import * as path from "path";
 import * as touch from "touch";
 import * as versync from "versync";
-import * as webpack from "webpack";
 
-import * as webpackConfig from "../webpack.config";
 import { cprp, exec, execFile, execFileAndReport, existsInFile, fs, mkdirpAsync,
          newer, spawn } from "./util";
 
@@ -107,27 +105,18 @@ gulp.task(
       });
   });
 
-gulp.task(
-  "webpack", "Produce the distribution bundles.", ["default"],
-  (_callback) => {
-    // tslint:disable-next-line:no-non-null-assertion
-    const callback = _callback!;
-    webpack(webpackConfig as any, (err, stats) => {
-      if (err) {
-        callback(new gutil.PluginError("webpack", err));
-        return;
-      }
+function webpack(config?: string): Promise<void> {
+  const args = ["--mode", "production", "--progress", "--color"];
+  if (config !== undefined) {
+    args.push("--config", config);
+  }
 
-      const errors = stats.toJson().errors;
-      if (errors.length) {
-        callback(new gutil.PluginError("webpack", errors.join("")));
-        return;
-      }
+  return spawn("./node_modules/.bin/webpack", args, { stdio: "inherit" });
+}
 
-      gutil.log("[webpack]", stats.toString({ colors: true }));
-      callback();
-    });
-  });
+gulp.task("webpack", "Produce the distribution bundles.", ["default"],
+          // tslint:disable-next-line:no-unnecessary-callback-wrapper
+          () => webpack());
 
 //
 // Spawning a process due to this:

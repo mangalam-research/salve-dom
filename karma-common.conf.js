@@ -22,6 +22,8 @@ module.exports = function(config) {
     },
     reportSlowerThan: 200,
     files: [
+      "node_modules/core-js/client/core.js",
+      "node_modules/whatwg-fetch/fetch.js",
       "https://cdn.jsdelivr.net/bluebird/3.4.3/bluebird.min.js",
       "polyfills/firstElementChild_etc.js",
       "node_modules/systemjs/dist/system.js",
@@ -30,7 +32,7 @@ module.exports = function(config) {
       { pattern: "build/test-files/**/*", included: false },
       { pattern: "test/**/*.ts", included: false },
       { pattern: "test/schemas/*.js", included: false },
-      { pattern: "node_modules/salve/@(*.js|package.json)", included: false },
+      { pattern: "node_modules/salve/@(*.js|*.map|package.json)", included: false },
       { pattern: "node_modules/systemjs-plugin-text/@(*.js|package.json)",
         included: false },
     ],

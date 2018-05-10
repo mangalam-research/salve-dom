@@ -13,7 +13,8 @@ module.exports = {
     modules: ["build/dist/lib", "node_modules"],
   },
   entry: {
-    "salve-dom": "main.js",
+    // We no longer produce a development bundle.
+    // "salve-dom": "main.js",
     "salve-dom.min": "main.js",
   },
   devtool: "source-map",
@@ -25,10 +26,4 @@ module.exports = {
     libraryTarget: "umd",
   },
   externals,
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      include: /\.min\.js$/,
-    }),
-  ],
 };
