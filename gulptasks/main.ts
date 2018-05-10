@@ -5,12 +5,13 @@ import * as help from "gulp-help";
 import * as gulpNewer from "gulp-newer";
 import * as gutil from "gulp-util";
 import * as path from "path";
+import * as touch from "touch";
 import * as versync from "versync";
 import * as webpack from "webpack";
 
 import * as webpackConfig from "../webpack.config";
 import { cprp, exec, execFile, execFileAndReport, existsInFile, fs, mkdirpAsync,
-         newer, spawn, touchAsync } from "./util";
+         newer, spawn } from "./util";
 
 const gulp = help(originalGulp);
 
@@ -243,7 +244,7 @@ gulp.task("typedoc", "Generate the documentation", ["tslint"], async () => {
   await spawn("./node_modules/.bin/typedoc", tsoptions, { stdio: "inherit" });
 
   await Promise.all([fs.writeFileAsync(hashPath, currentHash),
-                     touchAsync(stamp)]);
+                     touch(stamp)]);
 });
 
 gulp.task("clean", "Remove the build.", () => del(["build"]));

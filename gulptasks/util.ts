@@ -5,7 +5,6 @@ import * as _fs from "fs-extra";
 import * as gulp from "gulp";
 import * as gulpNewer from "gulp-newer";
 import * as gutil from "gulp-util";
-import * as touch from "touch";
 
 declare module "fs-extra" {
   export function mkdirAsync(dir: string): Promise<any>;
@@ -22,7 +21,6 @@ export const fs = promisifyFS(_fs);
 
 export const mkdirpAsync = (fs as any).ensureDirAsync.bind(fs);
 export const copy = (fs as any).copyAsync.bind(fs);
-export const touchAsync = Bluebird.promisify(touch);
 
 export { execFile };
 
