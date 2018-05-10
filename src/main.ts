@@ -13,17 +13,15 @@ function _indexOf(parent: NodeList, needle: Node): number {
   return Array.prototype.indexOf.call(parent, needle);
 }
 
-export function isAttr(it: Node): it is Attr {
-  const attrNodeType = Node.ATTRIBUTE_NODE;
-
-  // We check that ``attr_node_type`` is not undefined because eventually
-  // ``ATTRIBUTE_NODE`` will be removed from the ``Node`` interface, and then we
-  // could be testing ``undefined === undefined`` for objects which are not
-  // attributes, which would return ``true``. The function is not very strict
-  // but it should not be too lax either.
-  return it instanceof Attr ||
-    ((attrNodeType !== undefined) && (it.nodeType === attrNodeType));
-}
+// We check that ``Node.ATTRIBUTE_NODE`` is not undefined because eventually
+// ``ATTRIBUTE_NODE`` will be removed from the ``Node`` interface, and then we
+// could be testing ``undefined === undefined`` for objects which are not
+// attributes, which would return ``true``. The function is not very strict but
+// it should not be too lax either.
+const attrNodeType = Node.ATTRIBUTE_NODE;
+export const isAttr = attrNodeType !== undefined ?
+  (it: Node): it is Attr => it.nodeType === attrNodeType :
+  (it: Node): it is Attr => it instanceof Attr;
 
 // validation_stage values
 
