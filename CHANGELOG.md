@@ -1,3 +1,16 @@
+3.0.0:
+
+ - Upgrade to salve 7.0.0.
+
+ - Fix: the documentation for ``possibleWhere`` already mentioned
+   (periphrastically) that passing an event with name patterns is not
+   allowed. (For instance, you may not pass ``new Event("enterStartTag", new
+   Name("", "", "foo"))``. You have to pass ``new Event("enterStartTag", "",
+   "foo")`` instead.) In fact, the method did not guard against it and would
+   sometimes work even if passed an event with a name pattern. The prohibition
+   has been clarified and the method will now fail hard if passed an event with
+   a name pattern in it.
+
 2.0.1:
 
  - Fixed an error with ``safeParse``. If a document was partially parsable, it

@@ -7,7 +7,8 @@
     "sourceMap": true,
     "inlineSources": true,
     "target": "es5",
-    "types": []
+    "types": [],
+    "lib": ["es5", "es6", "es2016", "dom"]
   },
   "include": [
     "**/*.ts"

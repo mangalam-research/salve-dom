@@ -15,7 +15,7 @@ declare module "fs-extra" {
 }
 
 function promisifyFS<T extends object>(x: T): T {
-  return Bluebird.promisifyAll(x) as T;
+  return Bluebird.promisifyAll(x);
 }
 
 export const fs = promisifyFS(_fs);
@@ -39,7 +39,7 @@ export function exec(command: string,
         gutil.log(stderr);
         reject(err);
       }
-      resolve([stdout, stderr]);
+      resolve([stdout.toString(), stderr.toString()]);
     });
   });
 }

@@ -4,9 +4,10 @@
  * @copyright Mangalam Research Center for Buddhist Languages
  */
 import "chai";
-import { ErrorData, ParsingError, safeParse, Validator,
-         WorkingState as WS } from "dist/lib/main";
-import * as main from "dist/lib/main";
+import { ErrorData, isAttr, Options, ParsingError, ResetData, safeParse,
+         /* tslint:disable-next-line:no-implicit-dependencies
+            no-submodule-imports */
+         Validator, WorkingState as WS, WorkingStateData } from "dist/lib/main";
 import "mocha";
 import * as salve from "salve";
 import * as util from "./util";
@@ -35,7 +36,7 @@ class CustomValidator extends Validator {
 }
 
 function onCompletion(p: Validator, cb: () => void): void {
-  p.events.addEventListener("state-update", (state: main.WorkingStateData) => {
+  p.events.addEventListener("state-update", (state: WorkingStateData) => {
     if (!(state.state === WS.VALID || state.state === WS.INVALID)) {
       return;
     }
@@ -44,6 +45,12 @@ function onCompletion(p: Validator, cb: () => void): void {
 }
 
 const verbose = false;
+
+function sameEvents(evs: salve.EventSet, expected: salve.Event[]): void {
+  assert.sameMembers(
+    Array.from(evs).map((x) => x.toString()),
+    expected.map((x) => x.toString()));
+}
 
 describe("Validator", () => {
   let parser: util.Parser;
@@ -78,11 +85,11 @@ describe("Validator", () => {
     ]).then(() => {});
   });
 
-  const settings: (keyof main.Options)[] =
+  const settings: (keyof Options)[] =
     ["timeout", "maxTimespan", "walkerCacheGap"];
   for (const setting of settings) {
     it(`fails when a ${setting} is less than 0`, () => {
-      const options: main.Options = {};
+      const options: Options = {};
       options[setting] = -1;
       assert.throws(
         () => new Validator(grammar, emptyTree, options),
@@ -253,7 +260,7 @@ describe("Validator", () => {
           done();
         }
       });
-      p.events.addEventListener("reset-errors", (ev: main.ResetData) => {
+      p.events.addEventListener("reset-errors", (ev: ResetData) => {
         assert.equal(ev.at, 0);
         gotReset = true;
       });
@@ -311,8 +318,7 @@ describe("Validator", () => {
       p.events.addEventListener(
         "possible-due-to-wildcard-change",
         (node: Node) => {
-          assert.isTrue(node.nodeType === Node.ELEMENT_NODE ||
-                        main.isAttr(node));
+          assert.isTrue(node.nodeType === Node.ELEMENT_NODE || isAttr(node));
           assert.isDefined((node as any).salveDomPossibleDueToWildcard);
           if (node instanceof Element) {
             if (node.tagName === "foo:bar") {
@@ -322,7 +328,7 @@ describe("Validator", () => {
               assert.isFalse((node as any).salveDomPossibleDueToWildcard);
             }
           }
-          else if (main.isAttr(node) &&
+          else if (isAttr(node) &&
                    (node.name === "foo:baz" || node.name === "baz")) {
             assert.isTrue((node as any).salveDomPossibleDueToWildcard);
           }
@@ -376,6 +382,7 @@ describe("Validator", () => {
       (only ? it.only : it)(name, () => {
         // tslint:disable-next-line:strict-boolean-expressions
         if (top instanceof Function) {
+          // tslint:disable-next-line:no-parameter-reassignment
           top = top();
         }
         const tree =
@@ -387,15 +394,15 @@ describe("Validator", () => {
 
     makeTest("empty document, at root", (p) => {
       const evs = p.possibleAt(emptyTree, 0);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
     },
              emptyTree);
 
     // There was an earlier problem by which using _getWalkerAt could
     // cause errors to get recorded more than once.
-    makeTest("does not duplicate errors", (p, tree) => {
+    makeTest("does not duplicate errors", (p) => {
       assert.equal(p.errors.length, 0);
       const em = badTree.getElementsByTagName("em")[0];
       const xxx = em.getAttributeNode("xxx")!;
@@ -408,27 +415,27 @@ describe("Validator", () => {
 
     makeTest("with actual contents, at root", (p, tree) => {
       const evs = p.possibleAt(tree, 0);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
     });
 
     makeTest("with actual contents, at end", (p, tree) => {
       const evs = p.possibleAt(tree, 1);
-      assert.sameMembers(evs.toArray(), []);
+      assert.equal(evs.size, 0);
     });
 
     makeTest("with actual contents, start of html", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("html")[0], 0);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("enterStartTag", new salve.Name("", "", "head"))]);
     });
 
     makeTest("with actual contents, start of head", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("head")[0], 0);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("enterStartTag", new salve.Name("", "", "title"))]);
     });
 
@@ -439,10 +446,10 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 0);
-               assert.sameMembers(
-                 evs.toArray(),
+               sameEvents(
+                 evs,
                  [new salve.Event("endTag", new salve.Name("", "", "title")),
-                  new salve.Event("text", /^.*$/)]);
+                  new salve.Event("text", /^[^]*$/)]);
              });
 
     makeTest("with actual contents, index inside text node",
@@ -452,26 +459,26 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 1);
-               assert.sameMembers(
-                 evs.toArray(),
+               sameEvents(
+                 evs,
                  [new salve.Event("endTag", new salve.Name("", "", "title")),
-                  new salve.Event("text", /^.*$/)]);
+                  new salve.Event("text", /^[^]*$/)]);
              });
 
     makeTest("with actual contents, end of title", (p, tree) => {
       const title = tree.getElementsByTagName("title")[0];
       const evs = p.possibleAt(title, title.childNodes.length);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("endTag", new salve.Name("", "", "title")),
-         new salve.Event("text", /^.*$/)]);
+         new salve.Event("text", /^[^]*$/)]);
     });
 
     makeTest("with actual contents, end of head", (p, tree) => {
       const el = tree.getElementsByTagName("head")[0];
       const evs = p.possibleAt(el, el.childNodes.length);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("endTag", new salve.Name("", "", "head"))]);
     });
 
@@ -480,14 +487,14 @@ describe("Validator", () => {
       const evs = p.possibleAt(
         el.parentNode!,
         _indexOf.call(el.parentNode!.childNodes, el) as number + 1);
-      assert.sameMembers(
-        evs.toArray(),
+      sameEvents(
+        evs,
         [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
     });
 
     makeTest("with actual contents, attributes on root", (p, tree) => {
       const evs = p.possibleAt(tree, 0, true);
-      assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+      sameEvents(evs, [new salve.Event("leaveStartTag")]);
     });
 
     makeTest("with actual contents, attributes on element", (p, tree) => {
@@ -495,7 +502,7 @@ describe("Validator", () => {
       const evs = p.possibleAt(el.parentNode!,
                                _indexOf.call(el.parentNode!.childNodes, el),
                                true);
-      assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+      sameEvents(evs, [new salve.Event("leaveStartTag")]);
     });
   });
 
@@ -528,8 +535,8 @@ describe("Validator", () => {
         (p, tree) => {
           const walker = reveal(p)._getWalkerAt(tree, 0, false);
           const evs = walker.possible();
-          assert.sameMembers(
-            evs.toArray(),
+          sameEvents(
+            evs,
             [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
         },
         emptyTree);
@@ -537,15 +544,15 @@ describe("Validator", () => {
       makeTest("at root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
       });
 
       makeTest("at end", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, -1, false);
         const evs = walker.possible();
-        assert.sameMembers(evs.toArray(), []);
+        assert.equal(evs.size, 0);
       });
 
       makeTest("start of html", (p, tree) => {
@@ -553,8 +560,8 @@ describe("Validator", () => {
           reveal(p)._getWalkerAt(tree.getElementsByTagName("html")[0],
                                  0, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("enterStartTag", new salve.Name("", "", "head"))]);
       });
 
@@ -563,8 +570,8 @@ describe("Validator", () => {
           reveal(p)._getWalkerAt(tree.getElementsByTagName("head")[0],
                                  0, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("enterStartTag", new salve.Name("", "", "title"))]);
       });
 
@@ -574,10 +581,10 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 0, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^.*$/)]);
+           new salve.Event("text", /^[^]*$/)]);
       });
 
       makeTest("index inside text node", (p, tree) => {
@@ -586,10 +593,10 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 1, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^.*$/)]);
+           new salve.Event("text", /^[^]*$/)]);
       });
 
       makeTest("end of title", (p, tree) => {
@@ -597,18 +604,18 @@ describe("Validator", () => {
         const walker =
           reveal(p)._getWalkerAt(title, title.childNodes.length, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^.*$/)]);
+           new salve.Event("text", /^[^]*$/)]);
       });
 
       makeTest("end of head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(el, el.childNodes.length, false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("endTag", new salve.Name("", "", "head"))]);
       });
 
@@ -619,15 +626,15 @@ describe("Validator", () => {
           _indexOf.call(el.parentNode!.childNodes, el) as number + 1,
           false);
         const evs = walker.possible();
-        assert.sameMembers(
-          evs.toArray(),
+        sameEvents(
+          evs,
           [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
       });
 
       makeTest("attributes on root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, true);
         const evs = walker.possible();
-        assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new salve.Event("leaveStartTag")]);
       });
 
       makeTest("attributes on element", (p, tree) => {
@@ -635,7 +642,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new salve.Event("leaveStartTag")]);
       });
 
       makeTest("attributes on element with prev sibling", (p, tree) => {
@@ -646,7 +653,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        assert.sameMembers(evs.toArray(), [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new salve.Event("leaveStartTag")]);
       });
     });
 
@@ -715,7 +722,7 @@ describe("Validator", () => {
 
       makeTest(
         "but not at the first position", (
-          p, revealed, tree) => {
+          _p, revealed, tree) => {
           // There is no point in caching the very first position in the
           // document, as creating a new walker is as fast or perhaps faster
           // than cloning a walker.
@@ -726,13 +733,13 @@ describe("Validator", () => {
         },
         emptyTree);
 
-      makeTest("but not the final location", (p, revealed, tree) => {
+      makeTest("but not the final location", (_p, revealed, tree) => {
         revealed._getWalkerAt(tree, -1, false);
         assert.equal(revealed._walkerCacheMax, -1);
         assert.equal(Object.keys(revealed._walkerCache).length, 0);
       });
 
-      makeTest("some walker (element)", (p, revealed, tree) => {
+      makeTest("some walker (element)", (_p, revealed, tree) => {
         const initialMax = revealed._walkerCacheMax;
         const el = tree.getElementsByTagName("em")[100];
         const walker = revealed._getWalkerAt(el, 0, false);
@@ -742,7 +749,7 @@ describe("Validator", () => {
       });
 
       makeTest("but does not cache walkers that are too close (element)",
-               (p, revealed, tree) => {
+               (_p, revealed, tree) => {
                  const initialMax = revealed._walkerCacheMax;
                  const el = tree.getElementsByTagName("em")[100];
                  revealed._getWalkerAt(el, 0, false);
@@ -756,7 +763,7 @@ describe("Validator", () => {
                  assert.equal(Object.keys(revealed._walkerCache).length, 1);
                });
 
-      makeTest("some walker (text)", (p, revealed, tree) => {
+      makeTest("some walker (text)", (_p, revealed, tree) => {
         const initialMax = revealed._walkerCacheMax;
         const el = tree.getElementsByTagName("em")[100];
         assert.equal(el.firstChild!.nodeType, Node.TEXT_NODE);
@@ -767,7 +774,7 @@ describe("Validator", () => {
       });
 
       makeTest("does not cache walkers that are too close (text)",
-               (p, revealed, tree) => {
+               (_p, revealed, tree) => {
                  const initialMax = revealed._walkerCacheMax;
                  const el = tree.getElementsByTagName("em")[100];
                  assert.equal(el.firstChild!.nodeType, Node.TEXT_NODE);
@@ -782,7 +789,7 @@ describe("Validator", () => {
                  assert.equal(Object.keys(revealed._walkerCache).length, 1);
                });
 
-      makeTest("some walker (attribute)", (p, revealed, tree) => {
+      makeTest("some walker (attribute)", (_p, revealed, tree) => {
         const initialMax = revealed._walkerCacheMax;
         const el = tree.getElementsByTagName("em")[100];
         const attr = el.attributes.getNamedItem("foo");
@@ -815,29 +822,30 @@ describe("Validator", () => {
 
     makeTest("multiple locations", (p, tree) => {
       const el = tree.querySelector("body");
-      const locs = p.possibleWhere(el!, new salve.Event(
-        "enterStartTag", new salve.Name("", "", "em")));
+      const locs = p.possibleWhere(el!,
+                                   new salve.Event("enterStartTag", "", "em"));
       assert.sameMembers(locs, [0, 1, 2, 3]);
     });
 
     makeTest("no locations", (p, tree) => {
       const el = tree.querySelector("title");
-      const locs = p.possibleWhere(el!, new salve.Event(
-        "enterStartTag", new salve.Name("", "", "impossible")));
+      const locs =
+        p.possibleWhere(el!,
+                        new salve.Event("enterStartTag", "", "impossible"));
       assert.sameMembers(locs, []);
     });
 
     makeTest("one location", (p, tree) => {
       const el = tree.querySelector("html");
-      const locs = p.possibleWhere(el!, new salve.Event(
-        "enterStartTag", new salve.Name("", "", "body")));
+      const locs =
+        p.possibleWhere(el!, new salve.Event("enterStartTag", "", "body"));
       assert.sameMembers(locs, [2, 3]);
     });
 
     makeTest("empty element", (p, tree) => {
       const el = tree.querySelector("em em");
-      const locs = p.possibleWhere(el!, new salve.Event(
-        "enterStartTag", new salve.Name("", "", "em")));
+      const locs =
+        p.possibleWhere(el!, new salve.Event("enterStartTag", "", "em"));
       assert.sameMembers(locs, [0]);
     });
 
@@ -846,9 +854,10 @@ describe("Validator", () => {
       // The way the schema is structured, the following element can match only
       // due to a wildcard. So the code of possibleWhere has to check every
       // possibility one by one rather than use ``.has`` on the event set.
-      const locs = p.possibleWhere(el!, new salve.Event(
-        "enterStartTag", new salve.Name("", "uri", "foreign")));
-      assert.sameMembers(locs, [1, 2, 3]);
+      const locs =
+        p.possibleWhere(el!,
+                        new salve.Event("enterStartTag", "uri", "foreign"));
+      assert.sameMembers(locs, [0, 1, 2, 3]);
     });
   });
 
@@ -889,8 +898,7 @@ describe("Validator", () => {
              "tag not allowed here: {\"ns\":\"\",\"name\":\"foo:unknown\"}");
          }
          else {
-           // tslint:disable-next-line:no-unused-expression
-           fail("ret is not an array") as never;
+           fail("ret is not an array");
          }
        });
 
@@ -909,8 +917,7 @@ describe("Validator", () => {
                         "cannot resolve attribute name foo:unknown");
          }
          else {
-           // tslint:disable-next-line:no-unused-expression
-           fail("ret is not an array") as never;
+           fail("ret is not an array");
          }
        });
 

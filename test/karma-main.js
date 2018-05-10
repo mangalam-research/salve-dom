@@ -35,7 +35,7 @@
       "build/test-files/": "/base/build/test-files/",
     },
     map: {
-      salve: "npm:salve",
+      salve: "npm:salve/salve.min",
       text: "npm:systemjs-plugin-text",
       "test/schemas": "/base/test/schemas",
     },

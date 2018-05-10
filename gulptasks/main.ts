@@ -1,4 +1,3 @@
-// tslint:disable: missing-jsdoc
 import { ArgumentParser } from "argparse";
 import * as del from "del";
 import * as originalGulp from "gulp";
@@ -135,17 +134,19 @@ gulp.task(
 // https://github.com/TypeStrong/ts-node/issues/286
 //
 function runKarma(options: string[], browsers?: string[]): Promise<any> {
+  let actualOptions = options;
   // We cannot let it be set to ``null`` or ``undefined``.
   if (browsers === undefined) {
     if (globalOptions.browsers) {
-      options = options.concat("--browsers", globalOptions.browsers);
+      actualOptions = options.concat("--browsers", globalOptions.browsers);
     }
   }
   else {
-    options = options.concat("---browsers", browsers);
+    actualOptions = options.concat("---browsers", browsers);
   }
 
-  return spawn("./node_modules/.bin/karma", options, { stdio: "inherit" });
+  return spawn("./node_modules/.bin/karma", actualOptions,
+               { stdio: "inherit" });
  }
 
 gulp.task("karma", "Run the karma tests.", ["default", "convert-test-files"],

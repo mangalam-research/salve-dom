@@ -61,15 +61,15 @@
     "systemjs": "^0.20.9",
     "systemjs-plugin-text": "0.0.9",
     "touch": "^1.0.0",
-    "ts-node": "^3.3.0",
-    "tslint": "^5.8.0",
-    "tslint-config-lddubeau": "^2.0.1",
-    "typedoc": "^0.7.1",
-    "typescript": "^2.6.2",
+    "ts-node": "^6.0.3",
+    "tslint": "^5.10.0",
+    "tslint-config-lddubeau": "^2.0.3",
+    "typedoc": "^0.11.1",
+    "typescript": "^2.7.2",
     "versync": "^3.1.0",
     "webpack": "^3.8.1"
   },
   "dependencies": {
-    "salve": ">=4.3.0 <7"
+    "salve": "^7.0.0"
   }
 }

@@ -6,6 +6,7 @@
 import "chai";
 import "mocha";
 
+// tslint:disable-next-line:no-submodule-imports no-implicit-dependencies
 import { EventEmitter } from "dist/lib/event_emitter";
 
 const assert = chai.assert;

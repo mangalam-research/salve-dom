@@ -4,8 +4,8 @@
  * @license MPL 2.0
  * @copyright Mangalam Research Center for Buddhist Languages
  */
-import { BasePattern, EName, Event, EventSet, Grammar, GrammarWalker,
-         ValidationError, Walker } from "salve";
+import { ConcreteName, EName, Event, EventSet, Grammar, GrammarWalker,
+         ValidationError } from "salve";
 import { Consuming, EventEmitter } from "./event_emitter";
 import { fixPrototype } from "./tools";
 
@@ -87,13 +87,6 @@ class ProgressState {
 //   supported.
 //
 
-//
-// These are constants. So create them once rather than over and over again.
-//
-const ENTER_CONTEXT_EVENT = new Event("enterContext");
-const LEAVE_START_TAG_EVENT = new Event("leaveStartTag");
-const LEAVE_CONTEXT_EVENT = new Event("leaveContext");
-
 /**
  * Exception to be raised if we can't find our place in the events list. It is
  * only to be raised by code in this module but the documentation is left public
@@ -109,17 +102,17 @@ class EventIndexException extends Error {
 
 // This private utility function checks whether an event is possible only
 // because there is a name_pattern wildcard that allows it.
-function isPossibleDueToWildcard(walker: Walker<BasePattern>,
-                                 eventName: string,
+function isPossibleDueToWildcard(walker: GrammarWalker,
+                                 eventName: "enterStartTag" | "attributeName",
                                  ns: string,
                                  name: string): boolean {
-  const evs = walker.possible().toArray();
+  const evs = walker.possible();
   let matched = false;
   for (const ev of evs) {
     if (ev.params[0] !== eventName) {
       continue;
     }
-    const namePattern = ev.params[1];
+    const namePattern = ev.params[1] as ConcreteName;
     const matches = namePattern.match(ns, name);
 
     // Keep track of whether it ever matched anything.
@@ -218,6 +211,11 @@ export interface Options {
   walkerCacheGap?: number;
 }
 
+interface EventRecord {
+  name: string;
+  params: string[];
+}
+
 /**
  * A document validator. The validator assumes that the DOM tree it uses for
  * validation is always normalized: that is, there are no empty text nodes and
@@ -234,7 +232,7 @@ export interface Options {
  * communication costs between a ``Worker`` and the main process.)
  *
  * @param schema A ``Grammar`` object that has already been produced from
- * ``salve``'s ``constructTree``.
+ * ``salve``.
  *
  * @param root The root of the DOM tree to validate. This root contains the
  * document to validate but is not part of the document itself.
@@ -252,7 +250,7 @@ export class Validator {
   private readonly _boundWrapper: Function = this._workWrapper.bind(this);
 
   // Validation state
-  private _validationEvents: Event[] = [];
+  private _validationEvents: EventRecord[] = [];
   private _validationWalker: GrammarWalker;
   private _workingState: WorkingState = WorkingState.INCOMPLETE;
   private _partDone: number = 0;
@@ -378,7 +376,7 @@ export class Validator {
   getDocumentNamespaces(): {[key: string]: string[]} {
     const ret: {[key: string]: string[]} = {};
 
-    function _process(node: Node | null): void {
+    function _process(node: Element | null): void {
       if (node === null) {
         return;
       }
@@ -399,13 +397,13 @@ export class Validator {
       let child = node.firstChild;
       while (child !== null) {
         if (child.nodeType === Node.ELEMENT_NODE) {
-          _process(child);
+          _process(child as Element);
         }
         child = child.nextSibling;
       }
     }
 
-    _process(this.root.firstChild);
+    _process(this.root.firstChild as Element);
 
     return ret;
   }
@@ -499,18 +497,21 @@ export class Validator {
 
         // Handle namespace declarations. Yes, this must happen before we deal
         // with the tag name.
-        this._fireAndProcessEvent(walker, ENTER_CONTEXT_EVENT, curEl, 0);
+        this._fireAndProcessEvent(walker, "enterContext", [], curEl, 0);
         const attrIxLim = curEl.attributes.length;
         for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
           const attr = curEl.attributes[attrIx];
+          let uri: string | undefined;
           if (attr.name === "xmlns") {
-            this._fireAndProcessEvent(
-              walker, new Event("definePrefix", "", attr.value), curEl, 0);
+            uri = "";
           }
           else if (attr.name.lastIndexOf("xmlns:", 0) === 0) {
-            this._fireAndProcessEvent(
-              walker, new Event("definePrefix", attr.name.slice(6), attr.value),
-              curEl, 0);
+            uri = attr.name.slice(6);
+          }
+
+          if (uri !== undefined) {
+            this._fireAndProcessEvent(walker, "definePrefix",
+                                      [uri, attr.value], curEl, 0);
           }
         }
 
@@ -533,9 +534,9 @@ export class Validator {
         // wildcard.
         this._setPossibleDueToWildcard(curEl, walker, "enterStartTag",
                                        ename.ns, ename.name);
-        this._fireAndProcessEvent(
-          walker,
-          new Event("enterStartTag", ename.ns, ename.name), parent, curElIndex);
+        this._fireAndProcessEvent(walker,
+                                  "enterStartTag", [ename.ns, ename.name],
+                                  parent, curElIndex);
         this._setNodeProperty(curEl, "EventIndexBeforeAttributes",
                               events.length);
         this._fireAttributeEvents(walker, curEl);
@@ -543,7 +544,7 @@ export class Validator {
                               events.length);
 
         // Leave the start tag.
-        this._fireAndProcessEvent(walker, LEAVE_START_TAG_EVENT, curEl, 0);
+        this._fireAndProcessEvent(walker, "leaveStartTag", [], curEl, 0);
 
         stage = this._validationStage = Stage.CONTENTS;
         this._setNodeProperty(curEl, "EventIndexAfterStart", events.length);
@@ -564,8 +565,8 @@ export class Validator {
 
         const flushText = () => {
           if (textAccumulator.length !== 0) {
-            const event = new Event("text", textAccumulator.join(""));
-            const eventResult = walker.fireEvent(event);
+            const eventResult = walker.fireEvent("text",
+                                                 [textAccumulator.join("")]);
             if (eventResult instanceof Array) {
               if (textAccumulatorNode === undefined) {
                 throw new Error("flushText running with undefined node");
@@ -641,9 +642,9 @@ export class Validator {
           ename = new EName("", tagName);
         }
         this._fireAndProcessEvent(walker,
-                                  new Event("endTag", ename.ns, ename.name),
+                                  "endTag", [ename.ns, ename.name],
                                   curEl, curEl.childNodes.length);
-        this._fireAndProcessEvent(walker, LEAVE_CONTEXT_EVENT,
+        this._fireAndProcessEvent(walker, "leaveContext", [],
                                   curEl, curEl.childNodes.length);
 
         // Go back to the parent
@@ -764,6 +765,7 @@ export class Validator {
    *
    * @emits module:validator~Validator#reset-errors
    */
+  // @ts-ignore
   private _resetTo(node: Node): void {
     // An earlier implementation was trying to be clever and to avoid restarting
     // much earlier than strictly needed. That ended up being more costly than
@@ -947,10 +949,9 @@ export class Validator {
           (attr.name.lastIndexOf("xmlns", 0) === 0)) {
         continue;
       }
-      if (this._fireAttributeNameEvent(walker, el, attr)) {
-        this._fireAndProcessEvent(
-          walker,
-          new Event("attributeValue", attr.value), attr, 0);
+      if (this._fireAttributeNameEvent(walker, attr)) {
+        this._fireAndProcessEvent(walker,
+                                  "attributeValue", [attr.value], attr, 0);
       }
     }
   }
@@ -961,8 +962,7 @@ export class Validator {
    *
    * @returns True if the event was actually fired, false if not.
    */
-  private _fireAttributeNameEvent(walker: GrammarWalker, el: Element,
-                                  attr: Attr): boolean {
+  private _fireAttributeNameEvent(walker: GrammarWalker, attr: Attr): boolean {
     const attrName = attr.name;
     const ename = walker.resolveName(attrName, true);
     if (ename === undefined) {
@@ -976,7 +976,7 @@ export class Validator {
                                    ename.ns, ename.name);
     this._fireAndProcessEvent(
       walker,
-      new Event("attributeName", ename.ns, ename.name), attr, 0);
+      "attributeName", [ename.ns, ename.name], attr, 0);
 
     return true;
   }
@@ -986,7 +986,9 @@ export class Validator {
    *
    * @param walker The walker on which to fire events.
    *
-   * @param event The event to fire.
+   * @param name The name of the event to fire.
+   *
+   * @param params The event's parameters.
    *
    * @param el The DOM node associated with this event. Both ``el`` and ``ix``
    * can be undefined for events that have no location associated with them.
@@ -996,16 +998,33 @@ export class Validator {
    * location of the child passed as this parameter in ``el``.
    */
   private _fireAndProcessEvent(walker: GrammarWalker,
-                               event: Event,
+                               name: string,
+                               params: string[],
                                el?: Node | null,
                                ix?: number): void {
-    this._validationEvents.push(event);
-    const eventResult = walker.fireEvent(event);
-    if (eventResult instanceof Array) {
-      if (el != null && ix !== undefined && typeof ix !== "number") {
-        ix = _indexOf(el.childNodes, ix);
-      }
-      this._processEventResult(eventResult, el, ix);
+    this._validationEvents.push({ name, params });
+    switch (name) {
+      case "enterContext":
+        walker.enterContext();
+
+        return;
+      case "leaveContext":
+        walker.leaveContext();
+
+        return;
+      case "definePrefix":
+        walker.definePrefix(params[0], params[1]);
+
+        return;
+      default:
+        const eventResult = walker.fireEvent(name, params);
+        if (eventResult instanceof Array) {
+          if (el != null && ix !== undefined && typeof ix !== "number") {
+            // tslint:disable-next-line:no-parameter-reassignment
+            ix = _indexOf(el.childNodes, ix);
+          }
+          this._processEventResult(eventResult, el, ix);
+        }
     }
   }
 
@@ -1040,6 +1059,7 @@ export class Validator {
    */
   private _validateUpTo(container: Node, index: number,
                         attributes: boolean = false): void {
+    // tslint:disable-next-line:no-parameter-reassignment
     attributes = !!attributes; // Normalize.
     if (attributes && (container.childNodes === undefined ||
                        container.childNodes[index].nodeType !==
@@ -1144,6 +1164,7 @@ export class Validator {
   // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
   private _getWalkerAt(container: Node, index: number,
                        attributes: boolean = false): GrammarWalker {
+    // tslint:disable-next-line:no-parameter-reassignment
     attributes = !!attributes; // Normalize.
     if (attributes && (container.childNodes === undefined ||
                        container.childNodes[index].nodeType !==
@@ -1178,7 +1199,7 @@ export class Validator {
       if (walker === undefined) {
         throw new Error("calling fireTextEvent without a walker");
       }
-      walker.fireEvent(new Event("text", textNode.data));
+      walker.fireEvent("text", [textNode.data]);
     }
 
     if (isAttr(container)) {
@@ -1190,7 +1211,7 @@ export class Validator {
       // Don't fire on namespace attributes.
       if (!(container.name === "xmlns" || container.prefix === "xmlns")) {
         walker = walker.clone();
-        this._fireAttributeNameEvent(walker, el, container);
+        this._fireAttributeNameEvent(walker, container);
       }
     }
     else {
@@ -1340,7 +1361,20 @@ export class Validator {
     }
 
     for (let ix = searchIx; ix < eventIndex; ++ix) {
-      walker.fireEvent(this._validationEvents[ix]);
+      const { name, params } = this._validationEvents[ix];
+      switch (name) {
+        case "enterContext":
+          walker.enterContext();
+          break;
+        case "leaveContext":
+          walker.leaveContext();
+          break;
+        case "definePrefix":
+          walker.definePrefix(params[0], params[1]);
+          break;
+        default:
+          walker.fireEvent(name, params);
+      }
     }
 
     // This is a bit arbitrary to find a balance between caching too much
@@ -1381,29 +1415,52 @@ export class Validator {
    *
    * @param container A node.
    *
-   * @param event The event to search for. The event should be presented in the
-   * same format used for ``fireEvent``.
+   * @param event The event to search for. The event should contain the same
+   * data as would be passed to ``fireEvent``. Specifically, name patterns may
+   * not be used in the event passed to this method.
    *
    * @returns The locations in ``container`` where the event is possible.
    */
   possibleWhere(container: Node, event: Event): number[] {
     const ret = [];
+    const params = event.params as string[];
+
+    for (const param of params) {
+      if (typeof param !== "string") {
+        throw new Error("this method does not accept event with name \
+patterns: convert the pattern to a uri, localPart pair");
+      }
+    }
+
+    const name = params[0];
+    if (name === "startTagAndAttributes" || name === "attributeNameAndValue") {
+      throw new Error(`this method does not support ${name}: \
+you must use granular events instead`);
+    }
+
+    const eventString = event.toString();
     for (let index = 0; index <= container.childNodes.length; ++index) {
       const possible = this.possibleAt(container, index);
-      if (possible.has(event)) {
-        ret.push(index);
-      }
-      else if (event.params[0] === "enterStartTag" ||
-               event.params[0] === "attributeName") {
+      if (name === "enterStartTag" || name === "attributeName") {
         // In the case where we have a name pattern as the 2nd parameter, and
         // this pattern can be complex or have wildcards, then we have to check
         // all events one by one for a name pattern match. (While enterStartTag,
         // endTag and attributeName all have name patterns, endTag cannot be
         // complex or allow wildcards because what it allows much match the tag
-        // that started the current element.
-        for (const candidate of possible.toArray()) {
-          if (candidate.params[0] === event.params[0] &&
-              candidate.params[1].match(event.params[1], event.params[2])) {
+        // that started the current element. This is why we do not use this
+        // branch to test for it.)
+        for (const candidate of possible) {
+          if (candidate.params[0] === name &&
+              (candidate.params[1] as ConcreteName).match(params[1],
+                                                          params[2])) {
+            ret.push(index);
+            break;
+          }
+        }
+      }
+      else {
+        for (const candidate of possible) {
+          if (candidate.toString() === eventString) {
             ret.push(index);
             break;
           }
@@ -1549,7 +1606,8 @@ export class Validator {
    */
   private _setPossibleDueToWildcard(node: Node,
                                     walker: GrammarWalker,
-                                    eventName: string,
+                                    eventName:
+                                    "enterStartTag" | "attributeName",
                                     ns: string,
                                     name: string): void {
     const previous = this.getNodeProperty(node, "PossibleDueToWildcard");

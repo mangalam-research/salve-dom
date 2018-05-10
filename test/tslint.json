@@ -5,6 +5,7 @@
     "no-import-side-effect": [true,
                               { "ignore-pattern": "^(chai|mocha)$" }],
     "completed-docs": false,
-    "no-non-null-assertion": [false, "We use them too much in testing."]
+    "no-non-null-assertion": [false, "We use them too much in testing."],
+    "no-implicit-dependencies": [true, "dev"]
   }
 }

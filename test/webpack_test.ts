@@ -6,8 +6,8 @@
 import "chai";
 import "mocha";
 import * as salve from "salve";
-import { Validator } from "salve-dom";
-import * as main from "salve-dom";
+// tslint:disable-next-line:no-implicit-dependencies
+import { Validator, WorkingState, WorkingStateData } from "salve-dom";
 import * as util from "./util";
 
 const assert = chai.assert;
@@ -20,9 +20,9 @@ function testFile(name: string): string {
 // tests. The imports for the types used have to be done differently. Or we have
 // to ditch precise type annotations.
 export function onCompletion(p: Validator, cb: () => void): void {
-  p.events.addEventListener("state-update", (state: main.WorkingStateData) => {
-    if (!(state.state === main.WorkingState.VALID ||
-          state.state === main.WorkingState.INVALID)) {
+  p.events.addEventListener("state-update", (state: WorkingStateData) => {
+    if (!(state.state === WorkingState.VALID ||
+          state.state === WorkingState.INVALID)) {
       return;
     }
     cb();
@@ -56,7 +56,7 @@ describe("Webpack test", () => {
 
     // Manipulate stop so that we know when the work is done.
     onCompletion(p, () => {
-      assert.equal(p.getWorkingState().state, main.WorkingState.VALID);
+      assert.equal(p.getWorkingState().state, WorkingState.VALID);
       assert.equal(p.errors.length, 0);
       done();
     });

@@ -67,9 +67,10 @@ The big picture:
 Caveats
 =======
 
-1. The schema must have been processed with ``salve-convert`` (bundled with
-   ``salve``) in order to be used by the ``Validator`` class. It is the output
-   of ``salve-convert`` that ``Validator`` is able to use as a "schema".
+1. The schema must have been processed with salve in order to be used by the
+   ``Validator`` class. In versions of salve prior to 6.0.0 you used the CLI
+   tool ``salve-convert`` for this. From 6.0.0 onwards ``salve-convert`` is
+   deprecated and you should instead use salve's conversion API.
 
 2. Errors report the DOM ``Node`` where the errors occur. This works fine if you
    are showing the actual document being validated to the user: you can just
@@ -90,22 +91,28 @@ Caveats
    writing an XML parser. If you *must* report errors with line and column
    numbers that refer to the source as provided by the user, your best bet is to
    use salve in conjuction with a library like
-   [sax](https://github.com/isaacs/sax-js).
+   [sax](https://github.com/isaacs/sax-js). Salve's own source code and test
+   suite have examples of such usage.
 
 Browser Requirements
 ====================
+
+You should check the requirements provided in salve's own README if you want
+details regarding what the JavaScript environment must support. The short story
+is that we recommend using [``core-js``](https://github.com/zloirock/core-js) on
+browsers that are too old.
+
+Additionally, your browser must have support for ``firstElementChild`` and its
+associated properties on nodes that implement the ``Document``, ``Element`` and
+``CharacterData`` interfaces. **If your target browser does not have this, then
+you need a polyfill that provides it.** Chrome and Firefox have not needed such
+polyfill for a long time but IE and Edge need it. (A polyfill is included in the
+``polyfills`` subdirectory.)
 
 salve-dom passes its test suite on:
 
 * Chrome, Firefox, IE 11, Edge, Opera and Safari form Mavericks onwards. It has
   been tested on "relatively recent versions".
-
-Your browser must have support for ``firstElementChild`` and its associated
-properties on nodes that implement the ``Document``, ``Element`` and
-``CharacterData`` interfaces. **If your target browser does not have this, then
-you need a polyfill that provides it.** Chrome and Firefox have not needed such
-polyfill for a long time but IE and Edge need it. (A polyfill is included in the
-``polyfills`` subdirectory.)
 
 Performance Note on FF
 ======================
@@ -116,7 +123,7 @@ the same ballpark performance-wise. However, when the test suite is run on FF
 a noticable performance degradation bump at FF 49, getting progressively worse
 with newer versions.
 
-I unfortunately do not have time to track down what could be causing this
+We unfortunately do not have time to track down what could be causing this
 performance drop on FF.
 
 Loading
