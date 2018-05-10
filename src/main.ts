@@ -98,7 +98,7 @@ class EventIndexException extends Error {
   }
 }
 
-// This private utility function checks whether an event is possible only
+// This private utility function checks whether an event is possible *only*
 // because there is a name_pattern wildcard that allows it.
 function isPossibleDueToWildcard(walker: GrammarWalker,
                                  eventName: "enterStartTag" | "attributeName",
@@ -111,15 +111,15 @@ function isPossibleDueToWildcard(walker: GrammarWalker,
       continue;
     }
     const namePattern = ev.params[1] as ConcreteName;
-    const matches = namePattern.match(ns, name);
+    if (namePattern.match(ns, name)) {
+      // We already know that it matches, and this is not merely due to a
+      // wildcard.
+      if (!namePattern.wildcardMatch(ns, name)) {
+        return false;
+      }
 
-    // Keep track of whether it ever matched anything.
-    matched = matched || matches;
-
-    // We already know that it matches, and this is not merely due to a
-    // wildcard.
-    if (matches && !namePattern.wildcardMatch(ns, name)) {
-      return false;
+      // Keep track of whether it ever matched anything.
+      matched = true;
     }
   }
 
@@ -323,17 +323,13 @@ export class Validator {
   }
 
   private _clearNodeProperties(node: Node): void {
-    const keys: CustomNodeProperty[] = [
-      "EventIndexAfter",
-      "EventIndexAfterStart",
-      "EventIndexBeforeAttributes",
-      "EventIndexAfterAttributes",
-      "PossibleDueToWildcard",
-      "ErrorId",
-    ];
-    for (const key of keys) {
-      delete (node as any)[this.makeKey(key)];
-    }
+    const anode = node as any;
+    delete anode[this.makeKey("EventIndexAfter")];
+    delete anode[this.makeKey("EventIndexAfterStart")];
+    delete anode[this.makeKey("EventIndexBeforeAttributes")];
+    delete anode[this.makeKey("EventIndexAfterAttributes")];
+    delete anode[this.makeKey("PossibleDueToWildcard")];
+    delete anode[this.makeKey("ErrorId")];
   }
 
   /**
@@ -558,13 +554,12 @@ export class Validator {
           // already validation contents
           this._previousChild.nextSibling;
 
-        let textAccumulator: string[] = [];
+        let textAccumulator = "";
         let textAccumulatorNode: Node | undefined;
 
         const flushText = () => {
-          if (textAccumulator.length !== 0) {
-            const eventResult = walker.fireEvent("text",
-                                                 [textAccumulator.join("")]);
+          if (textAccumulator !== "") {
+            const eventResult = walker.fireEvent("text", [textAccumulator]);
             if (eventResult instanceof Array) {
               if (textAccumulatorNode === undefined) {
                 throw new Error("flushText running with undefined node");
@@ -577,7 +572,7 @@ export class Validator {
                 _indexOf(parent.childNodes, textAccumulatorNode));
             }
           }
-          textAccumulator = [];
+          textAccumulator = "";
           textAccumulatorNode = undefined;
         };
 
@@ -588,7 +583,7 @@ export class Validator {
             // encountered, then all the text must be passed to salve as a
             // single event. We record the text and will flush it to salve
             // later.
-            textAccumulator.push((node as Text).data);
+            textAccumulator += (node as Text).data;
             if (textAccumulatorNode === undefined) {
               textAccumulatorNode = node;
             }
@@ -1437,9 +1432,10 @@ you must use granular events instead`);
     }
 
     const eventString = event.toString();
+    const hasNamePattern = name === "enterStartTag" || name === "attributeName";
     for (let index = 0; index <= container.childNodes.length; ++index) {
       const possible = this.possibleAt(container, index);
-      if (name === "enterStartTag" || name === "attributeName") {
+      if (hasNamePattern) {
         // In the case where we have a name pattern as the 2nd parameter, and
         // this pattern can be complex or have wildcards, then we have to check
         // all events one by one for a name pattern match. (While enterStartTag,
