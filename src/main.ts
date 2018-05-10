@@ -25,7 +25,7 @@ export const isAttr = attrNodeType !== undefined ?
 
 // validation_stage values
 
-enum Stage {
+const enum Stage {
   START_TAG = 1,
   CONTENTS,
   END_TAG,
