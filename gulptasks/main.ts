@@ -1,9 +1,9 @@
 import { ArgumentParser } from "argparse";
 import * as del from "del";
+import * as log from "fancy-log";
 import * as originalGulp from "gulp";
 import * as help from "gulp-help";
 import * as gulpNewer from "gulp-newer";
-import * as gutil from "gulp-util";
 import * as path from "path";
 import * as touch from "touch";
 import * as versync from "versync";
@@ -151,7 +151,7 @@ gulp.task(
 gulp.task("versync", "Run a version check on the code.",
           () => versync.run({
             verify: true,
-            onMessage: gutil.log,
+            onMessage: log,
           }));
 
 function runTslint(tsconfig: string, tslintConfig: string): Promise<void> {
@@ -217,7 +217,7 @@ gulp.task("typedoc", "Generate the documentation", ["tslint"], async () => {
     ]);
 
   if ((currentHash === savedHash) && !(await newer(sources, stamp))) {
-    gutil.log("No change, skipping typedoc.");
+    log("No change, skipping typedoc.");
     return;
   }
 

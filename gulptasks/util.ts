@@ -1,10 +1,10 @@
 import * as Bluebird from "bluebird";
 import { execFile } from "child-process-promise";
 import * as childProcess from "child_process";
+import * as log from "fancy-log";
 import * as _fs from "fs-extra";
 import * as gulp from "gulp";
 import * as gulpNewer from "gulp-newer";
-import * as gutil from "gulp-util";
 
 declare module "fs-extra" {
   export function mkdirAsync(dir: string): Promise<any>;
@@ -33,8 +33,8 @@ export function exec(command: string,
   return new Promise<[string, string]>((resolve, reject) => {
     childProcess.exec(command, options, (err, stdout, stderr) => {
       if (err) {
-        gutil.log(stdout);
-        gutil.log(stderr);
+        log(stdout);
+        log(stderr);
         reject(err);
       }
       resolve([stdout.toString(), stderr.toString()]);
@@ -112,11 +112,11 @@ export function execFileAndReport(
   return execFile(file, args, options)
     .then((result) => {
       if (result.stdout) {
-        gutil.log(result.stdout);
+        log(result.stdout);
       }
     }, (err) => {
       if (err.stdout) {
-        gutil.log(err.stdout);
+        log(err.stdout);
       }
       throw err;
     });
