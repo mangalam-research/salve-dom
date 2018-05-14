@@ -681,7 +681,7 @@ describe("Validator", () => {
         // This tests that validating up to an xmlns attribute
         // is not causing an error.
         const el = tree.getElementsByTagName("TEI")[0];
-        const attribute = el.attributes.getNamedItem("xmlns");
+        const attribute = el.attributes.getNamedItem("xmlns")!;
         const walker = reveal(p)._getWalkerAt(attribute, 0, false);
         walker.possible();
         assert.equal(p.errors.length, 0);
@@ -691,7 +691,7 @@ describe("Validator", () => {
         // This tests that validating up to an xmlns:... attribute
         // is not causing an error.
         const el = tree.getElementsByTagName("TEI")[0];
-        const attribute = el.attributes.getNamedItem("xmlns:foo");
+        const attribute = el.attributes.getNamedItem("xmlns:foo")!;
         const walker = reveal(p)._getWalkerAt(attribute, 0, false);
         walker.possible();
         assert.equal(p.errors.length, 0);
@@ -792,7 +792,7 @@ describe("Validator", () => {
       makeTest("some walker (attribute)", (_p, revealed, tree) => {
         const initialMax = revealed._walkerCacheMax;
         const el = tree.getElementsByTagName("em")[100];
-        const attr = el.attributes.getNamedItem("foo");
+        const attr = el.attributes.getNamedItem("foo")!;
         assert.isDefined(attr);
         revealed._getWalkerAt(attr, 0, false);
         assert.isTrue(revealed._walkerCacheMax > initialMax);

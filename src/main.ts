@@ -1085,7 +1085,8 @@ export class Validator {
     }
     else {
       if (isAttr(container)) {
-        toInspect = container.ownerElement;
+        // tslint:disable-next-line:no-non-null-assertion
+        toInspect = container.ownerElement!;
         dataKey = "EventIndexBeforeAttributes";
       }
       else {
@@ -1196,7 +1197,8 @@ export class Validator {
     }
 
     if (isAttr(container)) {
-      const el = container.ownerElement;
+      // tslint:disable-next-line:no-non-null-assertion
+      const el = container.ownerElement!;
       walker = this.readyWalker(
         // tslint:disable-next-line:no-non-null-assertion
         this.getNodeProperty(el, "EventIndexBeforeAttributes")!);
