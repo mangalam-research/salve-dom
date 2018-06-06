@@ -1,15 +1,5 @@
-// Minimal localConfig if there is not one locally.
 "use strict";
 let _ = require("lodash");
-
-let localConfig = {
-  browserStack: {},
-};
-try {
-  // eslint-disable-next-line import/no-unresolved, global-require
-  localConfig = require("./local-config");
-}
-catch (ex) {} // eslint-disable-line no-empty
 
 module.exports = function(config) {
   const options = {
@@ -114,7 +104,33 @@ module.exports = function(config) {
     singleRun: false,
   };
 
-  // Bring in the options from the localConfig file.
+  let localConfig = {
+    browserStack: {},
+  };
+
+  if (process.env.CONTINUOUS_INTEGRATION) {
+    // Running on Travis. Grab the configuration from Travis.
+    localConfig.browserStack = {
+      // Travis provides the tunnel.
+      startTunnel: false,
+      tunnelIdentifier: process.env.BROWSERSTACK_LOCAL_IDENTIFIER,
+      // Travis adds "-travis" to the name, which mucks things up.
+      username: process.env.BROWSERSTACK_USER.replace("-travis", ""),
+      accessKey: process.env.BROWSERSTACK_ACCESS_KEY,
+    };
+  }
+  else {
+    // Running outside Travis: we get our configuration from ./local-config, if
+    // it exists.
+    try {
+      // eslint-disable-next-line import/no-unresolved, global-require
+      localConfig = require("./local-config");
+    }
+    catch (ex) {} // eslint-disable-line no-empty
+  }
+
+  // Merge the browserStack configuration we got with the base values in our
+  // config.
   _.merge(options.browserStack, localConfig.browserStack);
 
   const browsers = config.browsers;
