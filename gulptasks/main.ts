@@ -150,7 +150,6 @@ gulp.task(
 
 gulp.task("versync", "Run a version check on the code.",
           () => versync.run({
-            verify: true,
             onMessage: log,
           }));
 
