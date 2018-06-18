@@ -72,9 +72,9 @@ describe("Validator", () => {
 
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
-        .then((text) => grammar = salve.constructTree(text)),
+        .then((text) => grammar = salve.readTreeFromJSON(text)),
       util.fetchText("test/schemas/tei-simplified-rng.js")
-        .then((text) => teiSchemaGrammar = salve.constructTree(text)),
+        .then((text) => teiSchemaGrammar = salve.readTreeFromJSON(text)),
       util.fetchText(testFile("multiple_namespaces_on_same_node_converted.xml"))
         .then((text) => multipleNamespacesTree = parser.parse(text)),
       util.fetchText(testFile("percent_to_parse_converted.xml"))
