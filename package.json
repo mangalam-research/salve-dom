@@ -76,7 +76,7 @@
     "whatwg-fetch": "^2.0.4"
   },
   "dependencies": {
-    "salve": "^7.0.0"
+    "salve": "^8.0.0"
   },
   "greenkeeper": {
     "ignore": [

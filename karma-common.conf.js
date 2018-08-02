@@ -63,13 +63,6 @@ module.exports = function(config) {
         os: "Windows",
         os_version: "10",
       },
-      IE11: {
-        base: "BrowserStack",
-        browser: "IE",
-        browser_version: "11",
-        os: "Windows",
-        os_version: "8.1",
-      },
       Edge: {
         base: "BrowserStack",
         browser: "Edge",
@@ -82,23 +75,17 @@ module.exports = function(config) {
         os: "Windows",
         os_version: "10",
       },
-      SafariElCapitan: {
+      SafariHighSierra: {
         base: "BrowserStack",
         browser: "Safari",
         os: "OS X",
-        os_version: "El Capitan",
+        os_version: "High Sierra",
       },
-      SafariYosemite: {
+      SafariSierra: {
         base: "BrowserStack",
         browser: "Safari",
         os: "OS X",
-        os_version: "Yosemite",
-      },
-      SafariMavericks: {
-        base: "BrowserStack",
-        browser: "Safari",
-        os: "OS X",
-        os_version: "Mavericks",
+        os_version: "Sierra",
       },
     },
     singleRun: false,
