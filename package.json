@@ -29,7 +29,6 @@
   "homepage": "https://github.com/mangalam-research/salve-dom#readme",
   "devDependencies": {
     "@commitlint/cli": "^7.0.0",
-    "@commitlint/config-conventional": "^7.0.1",
     "@types/argparse": "^1.0.34",
     "@types/bluebird": "^3.5.23",
     "@types/chai": "^4.1.4",
@@ -76,6 +75,7 @@
     "whatwg-fetch": "^2.0.4"
   },
   "dependencies": {
+    "@commitlint/config-angular": "^7.0.1",
     "salve": "^8.0.0"
   },
   "greenkeeper": {
