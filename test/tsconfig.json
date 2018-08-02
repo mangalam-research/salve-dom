@@ -8,8 +8,8 @@
     "rootDir": ".",
     "outDir": "",
     "sourceMap": true,
-    "lib": ["dom", "es2015"],
-    "target": "es5"
+    "lib": ["es2016", "dom"],
+    "target": "es6"
   },
   "include": [
     "**/*.ts",

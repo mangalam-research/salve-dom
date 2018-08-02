@@ -1,17 +1,19 @@
 import { ArgumentParser } from "argparse";
-import * as del from "del";
-import * as log from "fancy-log";
-import * as originalGulp from "gulp";
-import * as help from "gulp-help";
-import * as gulpNewer from "gulp-newer";
-import * as path from "path";
-import * as touch from "touch";
-import * as versync from "versync";
+import del from "del";
+import fancyLog from "fancy-log";
+// tslint:disable-next-line:match-default-export-name import-name
+import originalGulp from "gulp";
+import gulpHelp from "gulp-help";
+// tslint:disable-next-line:match-default-export-name
+import gulpNewer from "gulp-newer";
+import path from "path";
+import touch from "touch";
+import versync from "versync";
 
 import { cprp, exec, execFile, execFileAndReport, existsInFile, fs, mkdirpAsync,
          newer, spawn } from "./util";
 
-const gulp = help(originalGulp);
+const gulp = gulpHelp(originalGulp);
 
 const parser = new ArgumentParser({ addHelp: true });
 
@@ -150,7 +152,7 @@ gulp.task(
 
 gulp.task("versync", "Run a version check on the code.",
           () => versync.run({
-            onMessage: log,
+            onMessage: fancyLog,
           }));
 
 function runTslint(tsconfig: string, tslintConfig: string): Promise<void> {
@@ -216,7 +218,7 @@ gulp.task("typedoc", "Generate the documentation", ["tslint"], async () => {
     ]);
 
   if ((currentHash === savedHash) && !(await newer(sources, stamp))) {
-    log("No change, skipping typedoc.");
+    fancyLog("No change, skipping typedoc.");
     return;
   }
 
