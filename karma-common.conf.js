@@ -12,10 +12,6 @@ module.exports = function(config) {
     },
     reportSlowerThan: 200,
     files: [
-      "node_modules/core-js/client/core.js",
-      "node_modules/whatwg-fetch/fetch.js",
-      "https://cdn.jsdelivr.net/bluebird/3.4.3/bluebird.min.js",
-      "polyfills/firstElementChild_etc.js",
       "node_modules/systemjs/dist/system.js",
       "test/karma-main.js",
       { pattern: "build/dist/**/*.@(js|json|map)", included: false },
