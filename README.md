@@ -100,21 +100,12 @@ Browser Requirements
 ====================
 
 You should check the requirements provided in salve's own README if you want
-details regarding what the JavaScript environment must support. The short story
-is that we recommend using [``core-js``](https://github.com/zloirock/core-js) on
-browsers that are too old.
+details regarding what the JavaScript environment must support. Since version 4
+salve-dom is compiled to generate es6 code, and does not include any polyfills
+for old browsers.
 
-Additionally, your browser must have support for ``firstElementChild`` and its
-associated properties on nodes that implement the ``Document``, ``Element`` and
-``CharacterData`` interfaces. **If your target browser does not have this, then
-you need a polyfill that provides it.** Chrome and Firefox have not needed such
-polyfill for a long time but IE and Edge need it. (A polyfill is included in the
-``polyfills`` subdirectory.)
-
-salve-dom passes its test suite on:
-
-* Chrome, Firefox, IE 11, Edge, Opera and Safari form Mavericks onwards. It has
-  been tested on "relatively recent versions".
+salve-dom passes its test suite on Chrome, Firefox, Edge, Opera and Safari form
+Sierra onwards. It has been tested on "relatively recent versions".
 
 Performance Note on FF
 ======================
