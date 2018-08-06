@@ -1,7 +1,6 @@
 "use strict";
-let _ = require("lodash");
 
-module.exports = function(config) {
+module.exports = (config) => {
   const options = {
     basePath: ".",
     frameworks: ["mocha", "chai"],
@@ -18,9 +17,14 @@ module.exports = function(config) {
       { pattern: "build/test-files/**/*", included: false },
       { pattern: "test/**/*.ts", included: false },
       { pattern: "test/schemas/*.js", included: false },
-      { pattern: "node_modules/salve/@(*.js|*.map|package.json)", included: false },
-      { pattern: "node_modules/systemjs-plugin-text/@(*.js|package.json)",
-        included: false },
+      {
+        pattern: "node_modules/salve/@(*.js|*.map|package.json)",
+        included: false,
+      },
+      {
+        pattern: "node_modules/systemjs-plugin-text/@(*.js|package.json)",
+        included: false,
+      },
     ],
     exclude: [],
     preprocessors: {
@@ -29,7 +33,7 @@ module.exports = function(config) {
     typescriptPreprocessor: {
       tsconfigPath: "./test/tsconfig.json",
       compilerOptions: {
-        // eslint-disable-next-line global-require
+        // eslint-disable-next-line global-require, import/no-extraneous-dependencies
         typescript: require("typescript"),
         sourceMap: false,
         // We have to have them inline for the browser to find them.
@@ -114,13 +118,14 @@ module.exports = function(config) {
 
   // Merge the browserStack configuration we got with the base values in our
   // config.
-  _.merge(options.browserStack, localConfig.browserStack);
+  Object.assign(options.browserStack, localConfig.browserStack);
 
-  const browsers = config.browsers;
+  const { browsers } = config;
   if (browsers.length === 1 && browsers[0] === "all") {
     const newList = options.browsers.concat(Object.keys(options.customLaunchers));
 
     // Yes, we must modify this array in place.
+    // eslint-disable-next-line prefer-spread
     browsers.splice.apply(browsers, [0, browsers.length].concat(newList));
   }
 

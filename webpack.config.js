@@ -1,7 +1,4 @@
 "use strict";
-/* global __dirname */
-
-const webpack = require("webpack");
 
 const externals = {};
 ["salve"].forEach((name) => {
@@ -19,7 +16,7 @@ module.exports = {
   },
   devtool: "source-map",
   output: {
-    path: __dirname + "/build/dist", // eslint-disable-line no-path-concat
+    path: `${__dirname}/build/dist`,
     filename: "[name].js",
     sourceMapFilename: "[name].map.js",
     library: "salve-dom",
