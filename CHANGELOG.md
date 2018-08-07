@@ -1,3 +1,26 @@
+<a name="4.0.0"></a>
+# [4.0.0](https://github.com/mangalam-research/salve-dom/compare/3.0.0...4.0.0) (2018-08-07)
+
+
+### build
+
+* upgrade packages used for building salve ([f27064b](https://github.com/mangalam-research/salve-dom/commit/f27064b))
+
+
+### Features
+
+* compile to es6 ([065caca](https://github.com/mangalam-research/salve-dom/commit/065caca))
+* export salve-dom's version number ([74d0dd6](https://github.com/mangalam-research/salve-dom/commit/74d0dd6))
+
+
+### BREAKING CHANGES
+
+* The upgrade to salve 8 entails that we no longer support IE11 and Safari 9
+because salve 8 does not support them. See salve's CHANGELOG.md file if you need
+the gory details.
+
+
+
 3.0.0:
 
  - Upgrade to salve 7.0.0.
