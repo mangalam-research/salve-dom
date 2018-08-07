@@ -9,6 +9,8 @@ import { ConcreteName, EName, Event, EventSet, Grammar, GrammarWalker,
 import { Consuming, EventEmitter } from "./event_emitter";
 import { fixPrototype } from "./tools";
 
+export const version = "3.0.0";
+
 function _indexOf(parent: NodeList, needle: Node): number {
   return Array.prototype.indexOf.call(parent, needle);
 }
