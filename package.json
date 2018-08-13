@@ -20,7 +20,7 @@
     "prepublishOnly": "node -e 'require(\"assert\")(!require(\"./package.json\").private)'",
     "salve-dom:publish": "npm run test-install && (cd build/dist && npm publish)",
     "preversion": "npm run test-install",
-    "version": "versync -b sync && git add src/main.ts && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
+    "version": "versync -b sync -a && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
     "postversion": "npm run salve-dom:publish",
     "postpublish": "git push origin --follow-tags",
     "typedoc": "typedoc --out ./build/api --name salve-dom --tsconfig ./src/tsconfig.json --listInvalidSymbolLinks",
@@ -75,7 +75,7 @@
     "tslint-config-lddubeau": "^2.0.3",
     "typedoc": "^0.11.1",
     "typescript": "^3.0.1",
-    "versync": "^4.0.0",
+    "versync": "^4.1.0",
     "webpack": "^4.16.3",
     "webpack-cli": "^3.1.0"
   },
