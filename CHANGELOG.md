@@ -1,3 +1,18 @@
+<a name="5.0.0"></a>
+# [5.0.0](https://github.com/mangalam-research/salve-dom/compare/v4.0.0...v5.0.0) (2018-08-28)
+
+
+### Features
+
+* upgrade to salve 9.0.0 ([2528764](https://github.com/mangalam-research/salve-dom/commit/2528764))
+
+
+### BREAKING CHANGES
+
+* now requires salve 9.0.0
+
+
+
 <a name="4.0.0"></a>
 # [4.0.0](https://github.com/mangalam-research/salve-dom/compare/3.0.0...4.0.0) (2018-08-07)
 

@@ -9,7 +9,7 @@ import { ConcreteName, DefaultNameResolver, EName, Event, EventSet, Grammar,
 import { Consuming, EventEmitter } from "./event_emitter";
 import { fixPrototype } from "./tools";
 
-export const version = "4.0.0";
+export const version = "5.0.0";
 
 function _indexOf(parent: NodeList, needle: Node): number {
   return Array.prototype.indexOf.call(parent, needle);
