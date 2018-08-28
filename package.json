@@ -80,7 +80,7 @@
     "webpack-cli": "^3.1.0"
   },
   "dependencies": {
-    "salve": "^8.0.0"
+    "salve": "^9.0.0"
   },
   "greenkeeper": {
     "ignore": [

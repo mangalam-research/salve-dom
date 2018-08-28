@@ -9,7 +9,8 @@ import { ErrorData, isAttr, Options, ParsingError, ResetData, safeParse,
             no-submodule-imports */
          Validator, WorkingState as WS, WorkingStateData } from "dist/lib/main";
 import "mocha";
-import * as salve from "salve";
+import { DefaultNameResolver, EName, Event, EventSet, Grammar,
+         GrammarWalker, Name, readTreeFromJSON } from "salve";
 import * as util from "./util";
 
 const assert = chai.assert;
@@ -46,7 +47,7 @@ function onCompletion(p: Validator, cb: () => void): void {
 
 const verbose = false;
 
-function sameEvents(evs: salve.EventSet, expected: salve.Event[]): void {
+function sameEvents(evs: EventSet, expected: Event[]): void {
   assert.sameMembers(
     Array.from(evs).map((x) => x.toString()),
     expected.map((x) => x.toString()));
@@ -56,8 +57,8 @@ describe("Validator", () => {
   let parser: util.Parser;
   let emptyTree: Element;
 
-  let teiSchemaGrammar: salve.Grammar;
-  let grammar: salve.Grammar;
+  let teiSchemaGrammar: Grammar;
+  let grammar: Grammar;
   let genericTree: Document;
   let multipleNamespacesTree: Document;
   let percentToParseTree: Document;
@@ -72,9 +73,9 @@ describe("Validator", () => {
 
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
-        .then((text) => grammar = salve.readTreeFromJSON(text)),
+        .then((text) => grammar = readTreeFromJSON(text)),
       util.fetchText("test/schemas/tei-simplified-rng.js")
-        .then((text) => teiSchemaGrammar = salve.readTreeFromJSON(text)),
+        .then((text) => teiSchemaGrammar = readTreeFromJSON(text)),
       util.fetchText(testFile("multiple_namespaces_on_same_node_converted.xml"))
         .then((text) => multipleNamespacesTree = parser.parse(text)),
       util.fetchText(testFile("percent_to_parse_converted.xml"))
@@ -394,9 +395,7 @@ describe("Validator", () => {
 
     makeTest("empty document, at root", (p) => {
       const evs = p.possibleAt(emptyTree, 0);
-      sameEvents(
-        evs,
-        [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
+      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
     },
              emptyTree);
 
@@ -415,9 +414,7 @@ describe("Validator", () => {
 
     makeTest("with actual contents, at root", (p, tree) => {
       const evs = p.possibleAt(tree, 0);
-      sameEvents(
-        evs,
-        [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
+      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
     });
 
     makeTest("with actual contents, at end", (p, tree) => {
@@ -427,16 +424,12 @@ describe("Validator", () => {
 
     makeTest("with actual contents, start of html", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("html")[0], 0);
-      sameEvents(
-        evs,
-        [new salve.Event("enterStartTag", new salve.Name("", "", "head"))]);
+      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "head"))]);
     });
 
     makeTest("with actual contents, start of head", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("head")[0], 0);
-      sameEvents(
-        evs,
-        [new salve.Event("enterStartTag", new salve.Name("", "", "title"))]);
+      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "title"))]);
     });
 
     makeTest("with actual contents, start of title (start of text node)",
@@ -446,10 +439,8 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 0);
-               sameEvents(
-                 evs,
-                 [new salve.Event("endTag", new salve.Name("", "", "title")),
-                  new salve.Event("text", /^[^]*$/)]);
+               sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                                new Event("text", /^[^]*$/)]);
              });
 
     makeTest("with actual contents, index inside text node",
@@ -459,27 +450,21 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 1);
-               sameEvents(
-                 evs,
-                 [new salve.Event("endTag", new salve.Name("", "", "title")),
-                  new salve.Event("text", /^[^]*$/)]);
+               sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                                new Event("text", /^[^]*$/)]);
              });
 
     makeTest("with actual contents, end of title", (p, tree) => {
       const title = tree.getElementsByTagName("title")[0];
       const evs = p.possibleAt(title, title.childNodes.length);
-      sameEvents(
-        evs,
-        [new salve.Event("endTag", new salve.Name("", "", "title")),
-         new salve.Event("text", /^[^]*$/)]);
+      sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                       new Event("text", /^[^]*$/)]);
     });
 
     makeTest("with actual contents, end of head", (p, tree) => {
       const el = tree.getElementsByTagName("head")[0];
       const evs = p.possibleAt(el, el.childNodes.length);
-      sameEvents(
-        evs,
-        [new salve.Event("endTag", new salve.Name("", "", "head"))]);
+      sameEvents(evs, [new Event("endTag", new Name("", "", "head"))]);
     });
 
     makeTest("with actual contents, after head", (p, tree) => {
@@ -487,14 +472,12 @@ describe("Validator", () => {
       const evs = p.possibleAt(
         el.parentNode!,
         _indexOf.call(el.parentNode!.childNodes, el) as number + 1);
-      sameEvents(
-        evs,
-        [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
+      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
     });
 
     makeTest("with actual contents, attributes on root", (p, tree) => {
       const evs = p.possibleAt(tree, 0, true);
-      sameEvents(evs, [new salve.Event("leaveStartTag")]);
+      sameEvents(evs, [new Event("leaveStartTag")]);
     });
 
     makeTest("with actual contents, attributes on element", (p, tree) => {
@@ -502,15 +485,15 @@ describe("Validator", () => {
       const evs = p.possibleAt(el.parentNode!,
                                _indexOf.call(el.parentNode!.childNodes, el),
                                true);
-      sameEvents(evs, [new salve.Event("leaveStartTag")]);
+      sameEvents(evs, [new Event("leaveStartTag")]);
     });
   });
 
   describe("_getWalkerAt", () => {
     interface Reveal {
       _getWalkerAt(container: Node, index: number,
-                   attributes: boolean): salve.GrammarWalker;
-      _walkerCache: {[key: number]: salve.GrammarWalker};
+                   attributes: boolean): GrammarWalker<DefaultNameResolver>;
+      _walkerCache: {[key: number]: GrammarWalker<DefaultNameResolver>};
       _walkerCacheMax: number;
     }
 
@@ -535,18 +518,15 @@ describe("Validator", () => {
         (p, tree) => {
           const walker = reveal(p)._getWalkerAt(tree, 0, false);
           const evs = walker.possible();
-          sameEvents(
-            evs,
-            [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
+          sameEvents(evs,
+                     [new Event("enterStartTag", new Name("", "", "html"))]);
         },
         emptyTree);
 
       makeTest("at root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("enterStartTag", new salve.Name("", "", "html"))]);
+        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
       });
 
       makeTest("at end", (p, tree) => {
@@ -560,9 +540,7 @@ describe("Validator", () => {
           reveal(p)._getWalkerAt(tree.getElementsByTagName("html")[0],
                                  0, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("enterStartTag", new salve.Name("", "", "head"))]);
+        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "head"))]);
       });
 
       makeTest("start of head", (p, tree) => {
@@ -570,9 +548,8 @@ describe("Validator", () => {
           reveal(p)._getWalkerAt(tree.getElementsByTagName("head")[0],
                                  0, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("enterStartTag", new salve.Name("", "", "title"))]);
+        sameEvents(evs,
+                   [new Event("enterStartTag", new Name("", "", "title"))]);
       });
 
       makeTest("start of title (start of text node)", (p, tree) => {
@@ -581,10 +558,8 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 0, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                         new Event("text", /^[^]*$/)]);
       });
 
       makeTest("index inside text node", (p, tree) => {
@@ -593,10 +568,8 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 1, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                         new Event("text", /^[^]*$/)]);
       });
 
       makeTest("end of title", (p, tree) => {
@@ -604,19 +577,15 @@ describe("Validator", () => {
         const walker =
           reveal(p)._getWalkerAt(title, title.childNodes.length, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("endTag", new salve.Name("", "", "title")),
-           new salve.Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
+                         new Event("text", /^[^]*$/)]);
       });
 
       makeTest("end of head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(el, el.childNodes.length, false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("endTag", new salve.Name("", "", "head"))]);
+        sameEvents(evs, [new Event("endTag", new Name("", "", "head"))]);
       });
 
       makeTest("after head", (p, tree) => {
@@ -626,15 +595,13 @@ describe("Validator", () => {
           _indexOf.call(el.parentNode!.childNodes, el) as number + 1,
           false);
         const evs = walker.possible();
-        sameEvents(
-          evs,
-          [new salve.Event("enterStartTag", new salve.Name("", "", "body"))]);
+        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
       });
 
       makeTest("attributes on root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, true);
         const evs = walker.possible();
-        sameEvents(evs, [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new Event("leaveStartTag")]);
       });
 
       makeTest("attributes on element", (p, tree) => {
@@ -642,7 +609,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        sameEvents(evs, [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new Event("leaveStartTag")]);
       });
 
       makeTest("attributes on element with prev sibling", (p, tree) => {
@@ -653,7 +620,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        sameEvents(evs, [new salve.Event("leaveStartTag")]);
+        sameEvents(evs, [new Event("leaveStartTag")]);
       });
     });
 
@@ -822,30 +789,26 @@ describe("Validator", () => {
 
     makeTest("multiple locations", (p, tree) => {
       const el = tree.querySelector("body");
-      const locs = p.possibleWhere(el!,
-                                   new salve.Event("enterStartTag", "", "em"));
+      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "em"));
       assert.sameMembers(locs, [0, 1, 2, 3]);
     });
 
     makeTest("no locations", (p, tree) => {
       const el = tree.querySelector("title");
       const locs =
-        p.possibleWhere(el!,
-                        new salve.Event("enterStartTag", "", "impossible"));
+        p.possibleWhere(el!, new Event("enterStartTag", "", "impossible"));
       assert.sameMembers(locs, []);
     });
 
     makeTest("one location", (p, tree) => {
       const el = tree.querySelector("html");
-      const locs =
-        p.possibleWhere(el!, new salve.Event("enterStartTag", "", "body"));
+      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "body"));
       assert.sameMembers(locs, [2, 3]);
     });
 
     makeTest("empty element", (p, tree) => {
       const el = tree.querySelector("em em");
-      const locs =
-        p.possibleWhere(el!, new salve.Event("enterStartTag", "", "em"));
+      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "em"));
       assert.sameMembers(locs, [0]);
     });
 
@@ -855,8 +818,7 @@ describe("Validator", () => {
       // due to a wildcard. So the code of possibleWhere has to check every
       // possibility one by one rather than use ``.has`` on the event set.
       const locs =
-        p.possibleWhere(el!,
-                        new salve.Event("enterStartTag", "uri", "foreign"));
+        p.possibleWhere(el!, new Event("enterStartTag", "uri", "foreign"));
       assert.sameMembers(locs, [0, 1, 2, 3]);
     });
   });
@@ -1113,23 +1075,21 @@ describe("Validator", () => {
         const tei = tree.getElementsByTagName("TEI")[0];
         assert.deepEqual(p.resolveNameAt(tei, 0, "teiHeader"),
                          // tslint:disable-next-line:no-http-string
-                         new salve.EName("http://www.tei-c.org/ns/1.0",
-                                         "teiHeader"));
+                         new EName("http://www.tei-c.org/ns/1.0", "teiHeader"));
         // Attribute.
         assert.deepEqual(p.resolveNameAt(tei, 0, "teiHeader", true),
-                         new salve.EName("", "teiHeader"));
+                         new EName("", "teiHeader"));
         assert.deepEqual(p.resolveNameAt(tei, 0, "foo:teiHeader"),
-                         new salve.EName("fooURI", "teiHeader"));
+                         new EName("fooURI", "teiHeader"));
       });
 
       it("in element that changes mappings", () => {
         const body = tree.getElementsByTagName("body")[0];
         assert.deepEqual(p.resolveNameAt(body, 0, "teiHeader"),
                          // tslint:disable-next-line:no-http-string
-                         new salve.EName("http://www.tei-c.org/ns/1.0",
-                                         "teiHeader"));
+                         new EName("http://www.tei-c.org/ns/1.0", "teiHeader"));
         assert.deepEqual(p.resolveNameAt(body, 0, "foo:teiHeader"),
-                         new salve.EName("changed", "teiHeader"));
+                         new EName("changed", "teiHeader"));
       });
     });
 

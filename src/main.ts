@@ -4,8 +4,8 @@
  * @license MPL 2.0
  * @copyright Mangalam Research Center for Buddhist Languages
  */
-import { ConcreteName, EName, Event, EventSet, Grammar, GrammarWalker,
-         ValidationError } from "salve";
+import { ConcreteName, DefaultNameResolver, EName, Event, EventSet, Grammar,
+         GrammarWalker, ValidationError } from "salve";
 import { Consuming, EventEmitter } from "./event_emitter";
 import { fixPrototype } from "./tools";
 
@@ -102,7 +102,7 @@ class EventIndexException extends Error {
 
 // This private utility function checks whether an event is possible *only*
 // because there is a name_pattern wildcard that allows it.
-function isPossibleDueToWildcard(walker: GrammarWalker,
+function isPossibleDueToWildcard(walker: GrammarWalker<DefaultNameResolver>,
                                  eventName: "enterStartTag" | "attributeName",
                                  ns: string,
                                  name: string): boolean {
@@ -251,14 +251,15 @@ export class Validator {
 
   // Validation state
   private _validationEvents: EventRecord[] = [];
-  private _validationWalker: GrammarWalker;
+  private _validationWalker: GrammarWalker<DefaultNameResolver>;
   private _workingState: WorkingState = WorkingState.INCOMPLETE;
   private _partDone: number = 0;
   private _validationStage: Stage = Stage.CONTENTS;
   private _previousChild: Node | null = null;
   private _validationStack: ProgressState[] = [new ProgressState(0, 1)];
   private _curEl: Element | Document;
-  private _walkerCache: {[key: number]: GrammarWalker} = Object.create(null);
+  private _walkerCache: {[key: number]: GrammarWalker<DefaultNameResolver>} =
+    Object.create(null);
   private _walkerCacheMax: number = -1;
   private readonly _prefix: string = "salveDom";
   // The distance between walkers under which we skip saving a walker in the
@@ -296,7 +297,7 @@ export class Validator {
     this._setNodeProperty(this._curEl, "EventIndexAfterStart",
                           this._validationEvents.length);
     this._setWorkingState(WorkingState.INCOMPLETE, 0);
-    this._validationWalker = this.schema.newWalker();
+    this._validationWalker = this.schema.newWalker(new DefaultNameResolver());
     this.events = this._events;
   }
 
@@ -515,7 +516,7 @@ export class Validator {
         // tslint:disable-next-line:no-non-null-assertion
         const parent = curEl.parentNode!;
         const curElIndex = _indexOf(parent.childNodes, curEl);
-        let ename = walker.resolveName(tagName, false);
+        let ename = walker.nameResolver.resolveName(tagName, false);
         if (ename === undefined) {
           this._processEventResult(
             [new ValidationError(`cannot resolve the name ${tagName}`)],
@@ -630,7 +631,7 @@ export class Validator {
         // we need it later
         const originalElement = curEl;
         const tagName = (curEl as Element).tagName;
-        let ename = walker.resolveName(tagName, false);
+        let ename = walker.nameResolver.resolveName(tagName, false);
         if (ename === undefined) {
           // We just produce the name name we produced when we encountered the
           // start tag.
@@ -773,7 +774,7 @@ export class Validator {
     this._erase(this.root);
     this._validationStage = Stage.CONTENTS;
     this._previousChild = null;
-    this._validationWalker = this.schema.newWalker();
+    this._validationWalker = this.schema.newWalker(new DefaultNameResolver());
     this._validationEvents = [];
     this._curEl = this.root;
     this._partDone = 0;
@@ -933,7 +934,8 @@ export class Validator {
   /**
    * Fires all the attribute events for a given element.
    */
-  private _fireAttributeEvents(walker: GrammarWalker, el: Element): void {
+  private _fireAttributeEvents(walker: GrammarWalker<DefaultNameResolver>,
+                               el: Element): void {
     // Find all attributes, fire events for them.
     const attributes = el.attributes;
     // tslint:disable-next-line:prefer-for-of
@@ -957,9 +959,10 @@ export class Validator {
    *
    * @returns True if the event was actually fired, false if not.
    */
-  private _fireAttributeNameEvent(walker: GrammarWalker, attr: Attr): boolean {
+  private _fireAttributeNameEvent(walker: GrammarWalker<DefaultNameResolver>,
+                                  attr: Attr): boolean {
     const attrName = attr.name;
-    const ename = walker.resolveName(attrName, true);
+    const ename = walker.nameResolver.resolveName(attrName, true);
     if (ename === undefined) {
       this._processError(
         {error: new ValidationError(
@@ -992,7 +995,7 @@ export class Validator {
    * which must be a child of ``el``. The index will be computed from the
    * location of the child passed as this parameter in ``el``.
    */
-  private _fireAndProcessEvent(walker: GrammarWalker,
+  private _fireAndProcessEvent(walker: GrammarWalker<DefaultNameResolver>,
                                name: string,
                                params: string[],
                                el?: Node | null,
@@ -1000,15 +1003,15 @@ export class Validator {
     this._validationEvents.push({ name, params });
     switch (name) {
       case "enterContext":
-        walker.enterContext();
+        walker.nameResolver.enterContext();
 
         return;
       case "leaveContext":
-        walker.leaveContext();
+        walker.nameResolver.leaveContext();
 
         return;
       case "definePrefix":
-        walker.definePrefix(params[0], params[1]);
+        walker.nameResolver.definePrefix(params[0], params[1]);
 
         return;
       default:
@@ -1158,8 +1161,10 @@ export class Validator {
    * index that makes no sense.
    */
   // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
-  private _getWalkerAt(container: Node, index: number,
-                       attributes: boolean = false): GrammarWalker {
+  private _getWalkerAt(container: Node,
+                       index: number,
+                       attributes: boolean = false):
+  GrammarWalker<DefaultNameResolver> {
     // tslint:disable-next-line:no-parameter-reassignment
     attributes = !!attributes; // Normalize.
     if (attributes && (container.childNodes === undefined ||
@@ -1180,7 +1185,7 @@ export class Validator {
       if (!attributes) {
         // We're before the top element, no events to fire.
         if (index === 0) {
-          return this.schema.newWalker();
+          return this.schema.newWalker(new DefaultNameResolver());
         }
 
         // _validateUpTo ensures that the current walker held by the validator
@@ -1190,7 +1195,7 @@ export class Validator {
       }
     }
 
-    let walker: GrammarWalker | undefined;
+    let walker: GrammarWalker<DefaultNameResolver> | undefined;
     function fireTextEvent(textNode: Text): void {
       if (walker === undefined) {
         throw new Error("calling fireTextEvent without a walker");
@@ -1296,7 +1301,7 @@ export class Validator {
     return walker;
   }
 
-  private readyWalker(eventIndex: number): GrammarWalker {
+  private readyWalker(eventIndex: number): GrammarWalker<DefaultNameResolver> {
     //
     // Perceptive readers will notice that the caching being done here could be
     // more aggressive. It turns out that the cases where we have to clone the
@@ -1353,7 +1358,7 @@ export class Validator {
       walker = walker.clone();
     }
     else {
-      walker = this.schema.newWalker();
+      walker = this.schema.newWalker(new DefaultNameResolver());
       searchIx = 0;
     }
 
@@ -1361,13 +1366,13 @@ export class Validator {
       const { name, params } = this._validationEvents[ix];
       switch (name) {
         case "enterContext":
-          walker.enterContext();
+          walker.nameResolver.enterContext();
           break;
         case "leaveContext":
-          walker.leaveContext();
+          walker.nameResolver.leaveContext();
           break;
         case "definePrefix":
-          walker.definePrefix(params[0], params[1]);
+          walker.nameResolver.definePrefix(params[0], params[1]);
           break;
         default:
           walker.fireEvent(name, params);
@@ -1603,7 +1608,7 @@ you must use granular events instead`);
    *
    */
   private _setPossibleDueToWildcard(node: Node,
-                                    walker: GrammarWalker,
+                                    walker: GrammarWalker<DefaultNameResolver>,
                                     eventName:
                                     "enterStartTag" | "attributeName",
                                     ns: string,
@@ -1643,7 +1648,8 @@ you must use granular events instead`);
                 attribute: boolean = false): EName | undefined {
     // Even when ``attribute`` is true, we want to call ``_getWalkerAt`` with
     // its ``attribute`` parameter ``false``.
-    return this._getWalkerAt(container, index).resolveName(name, attribute);
+    return this._getWalkerAt(container, index).nameResolver
+      .resolveName(name, attribute);
   }
 
   /**
@@ -1663,7 +1669,8 @@ you must use granular events instead`);
    */
   unresolveNameAt(container: Node, index: number, uri: string,
                   name: string): string | undefined {
-    return this._getWalkerAt(container, index).unresolveName(uri, name);
+    return this._getWalkerAt(container, index).nameResolver
+      .unresolveName(uri, name);
   }
 }
 

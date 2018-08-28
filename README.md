@@ -70,9 +70,7 @@ Caveats
 =======
 
 1. The schema must have been processed with salve in order to be used by the
-   ``Validator`` class. In versions of salve prior to 6.0.0 you used the CLI
-   tool ``salve-convert`` for this. From 6.0.0 onwards ``salve-convert`` is
-   deprecated and you should instead use salve's conversion API.
+   ``Validator`` class.
 
 2. Errors report the DOM ``Node`` where the errors occur. This works fine if you
    are showing the actual document being validated to the user: you can just

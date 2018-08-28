@@ -39,7 +39,7 @@ describe("Webpack test", () => {
 
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
-        .then((text) => grammar = salve.constructTree(text)),
+        .then((text) => grammar = salve.readTreeFromJSON(text)),
       util.fetchText(testFile("to_parse_converted.xml"))
         .then((text) => genericTree = parser.parse(text)),
     ]);
