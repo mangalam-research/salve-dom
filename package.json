@@ -24,8 +24,7 @@
     "postversion": "npm run salve-dom:publish",
     "postpublish": "git push origin --follow-tags",
     "typedoc": "typedoc --out ./build/api --name salve-dom --tsconfig ./src/tsconfig.json --listInvalidSymbolLinks",
-    "clean": "rm -rf build",
-    "commitmsg": "commitlint -e $GIT_PARAMS"
+    "clean": "rm -rf build"
   },
   "repository": {
     "type": "git",
@@ -59,7 +58,7 @@
     "fancy-log": "^1.3.2",
     "fs-extra": "^7.0.0",
     "glob": "^7.1.3",
-    "husky": "^0.14.3",
+    "husky": "^1.1.1",
     "karma": "^3.0.0",
     "karma-browserstack-launcher": "^1.3.0",
     "karma-chai": "^0.1.0",
@@ -93,6 +92,11 @@
       "initialBranches": "build(ci): whitelist greenkeeper branches",
       "devDependencyUpdate": "build(package): update ${dependency} to version ${version}",
       "devDependencyPin": "build(package): pin ${dependency} to ${oldVersion}"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -e $HUSKY_GIT_PARAMS"
     }
   }
 }
