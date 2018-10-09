@@ -83,7 +83,8 @@
   },
   "greenkeeper": {
     "ignore": [
-      "@types/gulp"
+      "@types/gulp",
+      "systemjs"
     ],
     "commitMessages": {
       "addConfigFile": "build: add Greenkeeper config file",
