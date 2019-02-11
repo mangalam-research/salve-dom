@@ -236,7 +236,7 @@ export class Validator {
   private _resetting: boolean = false;
   private _errors: ErrorData[] = [];
   private _errorsSeen: Record<string, boolean> = Object.create(null);
-  private readonly _boundWrapper: Function = this._workWrapper.bind(this);
+  private readonly _boundWrapper: () => void = this._workWrapper.bind(this);
 
   // Validation state
   private _validationEvents: EventRecord[] = [];
@@ -247,7 +247,7 @@ export class Validator {
   private _previousChild: Node | null = null;
   private _validationStack: ProgressState[] = [new ProgressState(0, 1)];
   private _curEl: Element | Document;
-  private _walkerCache: {[key: number]: GrammarWalker<DefaultNameResolver>} =
+  private _walkerCache: Record<number, GrammarWalker<DefaultNameResolver>> =
     Object.create(null);
   private _walkerCacheMax: number = -1;
   private readonly _prefix: string = "salveDom";
@@ -261,8 +261,8 @@ export class Validator {
               private readonly root: Element | Document,
               options: Options = {}) {
 
-    const keys: (keyof Options)[] = ["timeout", "maxTimespan",
-                                     "walkerCacheGap"];
+    const keys = ["timeout", "maxTimespan", "walkerCacheGap"] as
+    ["timeout", "maxTimespan", "walkerCacheGap"];
     for (const key of keys) {
       const value = options[key];
       if (value === undefined) {
@@ -273,6 +273,9 @@ export class Validator {
         throw new Error(`the value for ${key} cannot be negative`);
       }
 
+      // There is currently no simple way to make TS realize that the key used
+      // to index this is necessarily one of the private fields of TS. If the
+      // key were not computed, there'd be no problem.
       (this as any)[`_${key}`] = options[key];
     }
 
@@ -300,7 +303,7 @@ export class Validator {
    */
   getNodeProperty<T extends CustomNodeProperty>(node: Node, key: T):
   CustomNodeProperties[T] | undefined {
-    return (node as any)[this.makeKey(key)] as CustomNodeProperties[T];
+    return (node as any)[this.makeKey(key)];
   }
 
   /**
@@ -359,8 +362,8 @@ export class Validator {
    * of namespace URIs.  The values are lists because prefixes can be redefined
    * in a document.
    */
-  getDocumentNamespaces(): {[key: string]: string[]} {
-    const ret: {[key: string]: string[]} = {};
+  getDocumentNamespaces(): Record<string, string[]> {
+    const ret: Record<string, string[]> = {};
 
     function _process(node: Element | null): void {
       if (node === null) {
