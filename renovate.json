@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "lddubeau:base"
+  ],
+  "ignoreDeps": ["systemjs"]
+}
