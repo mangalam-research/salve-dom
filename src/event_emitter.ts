@@ -7,11 +7,13 @@
 
 export type Listener<T> = (ev: T) => (boolean | void);
 
+export type StringKeys<T> = Extract<keyof T, string>;
+
 /**
  * A map of event name to listener array.
  */
-export type SpecializedMap<Events> = {
-  [P in keyof Events]: Listener<Events[P]>[];
+type SpecializedMap<Events> = {
+  [P in StringKeys<Events>]: Listener<Events[P]>[];
 };
 
 /**
@@ -19,30 +21,30 @@ export type SpecializedMap<Events> = {
  * union of all possible event types defined in the ``Events`` map.
  */
 export type GeneralListener<Events> =
-  (name: string, ev: SpecializedMap<Events>[keyof Events]) => (boolean | void);
+  (name: string, ev: Events[keyof Events]) => (boolean | void);
 
 /**
  * This is an interface that can be used to hide the ``_emit`` method.
  */
 export interface Consuming<Events> {
-  addEventListener<T extends keyof Events>(
+  addEventListener<T extends StringKeys<Events>>(
     eventName: T, listener: Listener<Events[T]>): void;
   addEventListener(
     eventName: "*", listener: GeneralListener<Events>): void;
 
-  addOneTimeEventListener<T extends keyof Events>(
+  addOneTimeEventListener<T extends StringKeys<Events>>(
     eventName: T,
     listener: Listener<Events[T]>): any;
   addOneTimeEventListener(
     eventName: "*",
     listener: GeneralListener<Events>): any;
 
-  removeEventListener<T extends keyof Events>(
+  removeEventListener<T extends StringKeys<Events>>(
     eventName: T, listener: Listener<Events[T]>): void;
   removeEventListener(
     eventName: "*", listener: GeneralListener<Events>): void;
 
-  removeAllListeners<T extends keyof Events>(eventName: T): void;
+  removeAllListeners<T extends StringKeys<Events>>(eventName: T): void;
   removeAllListeners(eventName: "*"): void;
 }
 
@@ -84,11 +86,11 @@ export class EventEmitter<Events> implements Consuming<Events> {
    * @param listener The function that will be called when
    * the event occurs.
    */
-  addEventListener<T extends keyof Events>(
+  addEventListener<T extends StringKeys<Events>>(
     eventName: T, listener: Listener<Events[T]>): void;
   addEventListener(
     eventName: "*", listener: GeneralListener<Events>): void;
-  addEventListener<T extends keyof Events>(
+  addEventListener<T extends StringKeys<Events>>(
     eventName: "*" | T,
     listener: Listener<Events[T]> | GeneralListener<Events>): void {
     if (eventName === "*") {
@@ -122,13 +124,13 @@ export class EventEmitter<Events> implements Consuming<Events> {
    * way the identifier is created could change in future versions of this
    * code.)
    */
-  addOneTimeEventListener<T extends keyof Events>(
+  addOneTimeEventListener<T extends StringKeys<Events>>(
     eventName: T,
     listener: Listener<Events[T]>): any;
   addOneTimeEventListener(
     eventName: "*",
     listener: GeneralListener<Events>): any;
-  addOneTimeEventListener<T extends keyof Events>(
+  addOneTimeEventListener<T extends StringKeys<Events>>(
     eventName: "*" | T,
     listener: Listener<Events[T]> | GeneralListener<Events>): any {
     // We perform casts as any here to indicate to TypeScript that it is
@@ -136,7 +138,7 @@ export class EventEmitter<Events> implements Consuming<Events> {
     const me = (...args: any[]) => {
       this.removeEventListener(eventName as any, me);
 
-      return listener.apply(this, args);
+      return (listener as any).apply(this, args);
     };
 
     this.addEventListener(eventName as any, me);
@@ -152,11 +154,11 @@ export class EventEmitter<Events> implements Consuming<Events> {
    *
    * @param listener The handler to remove.
    */
-  removeEventListener<T extends keyof Events>(
+  removeEventListener<T extends StringKeys<Events>>(
     eventName: T, listener: Listener<Events[T]>): void;
   removeEventListener(
     eventName: "*", listener: GeneralListener<Events>): void;
-  removeEventListener<T extends keyof Events>(
+  removeEventListener<T extends StringKeys<Events>>(
     eventName: "*" | T,
     listener: Listener<Events[T]> | GeneralListener<Events>): void {
     const listeners = (eventName === "*") ?
@@ -178,10 +180,10 @@ export class EventEmitter<Events> implements Consuming<Events> {
    *
    * @param eventName The event whose listeners must all be removed.
    */
-  removeAllListeners<T extends keyof Events>(
+  removeAllListeners<T extends StringKeys<Events>>(
     eventName: T): void;
   removeAllListeners(eventName: "*"): void;
-  removeAllListeners<T extends keyof Events>(eventName: "*" | T): void {
+  removeAllListeners<T extends StringKeys<Events>>(eventName: "*" | T): void {
     if (eventName === "*") {
       this._generalListeners = [];
     }
@@ -191,15 +193,16 @@ export class EventEmitter<Events> implements Consuming<Events> {
   }
 
   /**
-   * This is the function that the class using this mixin must call to
-   * indicate that an event has occurred.
+   * This is the function that must be called to indicate that an event has
+   * occurred.
    *
    * @param eventName The name of the event to emit.
    *
    * @param ev The event data to provide to handlers. The type can be
    * anything.
    */
-  public _emit<T extends keyof Events>(eventName: T, ev: Events[T]): void {
+  public _emit<T extends StringKeys<Events>>(eventName: T,
+                                             ev: Events[T]): void {
     if (this._trace) {
       // tslint:disable-next-line: no-console
       console.log("simple_event_emitter emitting:", eventName, "with:", ev);
@@ -238,4 +241,4 @@ export class EventEmitter<Events> implements Consuming<Events> {
     }
   }
 }
-//  LocalWords:  Mangalam MPL Dubeau noop ev mixin
+//  LocalWords:  Mangalam MPL Dubeau noop ev

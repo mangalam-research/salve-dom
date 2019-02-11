@@ -848,8 +848,8 @@ describe("Validator", () => {
          const body = tree.getElementsByTagName("body")[0];
          const container = body.parentNode!;
          const index = _indexOf.call(container.childNodes, body);
-         const em = body.ownerDocument.createElementNS("unknown",
-                                                       "foo:unknown");
+         const em = body.ownerDocument!.createElementNS("unknown",
+                                                        "foo:unknown");
          const ret = p.speculativelyValidate(container, index, em);
          if (ret instanceof Array) {
            assert.equal(ret.length, 2);
@@ -869,7 +869,7 @@ describe("Validator", () => {
          const body = tree.getElementsByTagName("body")[0];
          const container = body.parentNode!;
          const index = _indexOf.call(container.childNodes, body);
-         const fakeBody = body.ownerDocument.createElement("body");
+         const fakeBody = body.ownerDocument!.createElement("body");
          fakeBody.textContent = "foo";
          fakeBody.setAttributeNS("unknown", "foo:unknown", "value");
          const ret = p.speculativelyValidate(container, index, fakeBody);
@@ -924,7 +924,7 @@ describe("Validator", () => {
     // An early bug would cause this case to get into an infinite loop.
     it("works fine if the data to validate is only text", () => {
       const container = tree.getElementsByTagName("em")[0];
-      const toParse = container.ownerDocument.createTextNode("data");
+      const toParse = container.ownerDocument!.createTextNode("data");
       const ret = p.speculativelyValidate(container, 0, toParse);
       assert.isFalse(ret, "fragment is valid");
     });
@@ -948,7 +948,7 @@ describe("Validator", () => {
       const container = body.parentNode!;
       const index = _indexOf.call(container.childNodes, body);
       assert.throws(p.speculativelyValidateFragment.bind(
-        p, container, index, document.createTextNode("blah")),
+        p, container, index, document.createTextNode("blah") as any),
                     Error, "toParse is not an element");
     });
   });
@@ -1035,7 +1035,7 @@ describe("Validator", () => {
     makeTest("with actual contents, errors in the tag examined",
              (tree) => {
                const el = tree.getElementsByTagName("em")[0];
-               el.appendChild(el.ownerDocument.createElement("foo"));
+               el.appendChild(el.ownerDocument!.createElement("foo"));
              },
              (p, tree) => {
                const errors =
@@ -1049,7 +1049,7 @@ describe("Validator", () => {
     makeTest("with actual contents, errors but not in the tag examined",
              (tree) => {
                const el = tree.getElementsByTagName("em")[0];
-               el.appendChild(el.ownerDocument.createElement("foo"));
+               el.appendChild(el.ownerDocument!.createElement("foo"));
              },
              (p, tree) => {
                const errors =

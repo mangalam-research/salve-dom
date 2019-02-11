@@ -153,7 +153,10 @@ describe("EventEmitter", () => {
     it("does nothing if the listener is not present among those added", () => {
       assert.doesNotThrow(
         // tslint:disable-next-line: no-empty
-        emitter.removeEventListener.bind(emitter, "event", () => {}));
+        () => {
+          // tslint:disable-next-line:no-empty
+          emitter.removeEventListener("event", () => {});
+        });
     });
 
     it("removes a listener that was added", () => {

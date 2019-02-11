@@ -146,16 +146,6 @@ export interface WorkingStateData {
   partDone: number;
 }
 
-declare global {
-  //
-  // Blegh... the global environment that TypeScript defines is based on IE
-  // poop. This code requires the following to be true. Users must load a shim
-  // to ensure it in crap browsers like IE.
-  //
-  // tslint:disable-next-line: no-empty-interface
-  interface Text extends ElementTraversal {}
-}
-
 /**
  * A mapping of event name to event type for the events that [[Validator]]
  * supports. This is used by TypeScript's generics but it is also a nice handy
@@ -391,7 +381,7 @@ export class Validator {
         }
       }
 
-      let child = node.firstChild;
+      let child: Node | null = node.firstChild;
       while (child !== null) {
         if (child.nodeType === Node.ELEMENT_NODE) {
           _process(child as Element);
@@ -1494,8 +1484,10 @@ you must use granular events instead`);
   speculativelyValidate(container: Node, index: number,
                         toParse: Node | Node[]): ErrorData[] | false {
     let clone;
+    // tslint:disable-next-line:no-non-null-assertion
+    const doc = container.ownerDocument!;
     if (toParse instanceof Array) {
-      clone = container.ownerDocument.createDocumentFragment();
+      clone = doc.createDocumentFragment();
       for (const child of toParse) {
         clone.insertBefore(child.cloneNode(true), null);
       }
@@ -1504,7 +1496,7 @@ you must use granular events instead`);
       clone = toParse.cloneNode(true);
     }
 
-    const root = container.ownerDocument.createElement("div");
+    const root = doc.createElement("div");
     root.insertBefore(clone, null);
 
     return this.speculativelyValidateFragment(container, index, root);
