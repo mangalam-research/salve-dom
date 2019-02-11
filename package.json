@@ -50,7 +50,7 @@
     "@commitlint/config-angular": "^7.5.0",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
-    "@types/systemjs": "^0.20.1",
+    "@types/systemjs": "^0.20.6",
     "chai": "^4.2.0",
     "conventional-changelog-cli": "^2.0.11",
     "eslint": "^5.13.0",
