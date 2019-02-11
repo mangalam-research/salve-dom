@@ -63,7 +63,7 @@ describe("Validator", () => {
   let multipleNamespacesTree: Document;
   let percentToParseTree: Document;
 
-  before(function before(): Promise<void> {
+  before(async function before(): Promise<void> {
     // We have a high timeout here because IE11 on Browser Stack often takes
     // its sweet old time here.
     // tslint:disable-next-line:no-invalid-this
@@ -71,19 +71,21 @@ describe("Validator", () => {
     parser = util.getParser();
     emptyTree = util.getEmptyTree();
 
-    return Promise.all([
-      util.fetchText("test/schemas/simplified-rng.js")
-        .then((text) => grammar = readTreeFromJSON(text)),
-      util.fetchText("test/schemas/tei-simplified-rng.js")
-        .then((text) => teiSchemaGrammar = readTreeFromJSON(text)),
-      util.fetchText(testFile("multiple_namespaces_on_same_node_converted.xml"))
-        .then((text) => multipleNamespacesTree = parser.parse(text)),
-      util.fetchText(testFile("percent_to_parse_converted.xml"))
-        .then((text) => percentToParseTree = parser.parse(text)),
-      util.fetchText(testFile("to_parse_converted.xml"))
-        .then((text) => genericTree = parser.parse(text)),
-      // tslint:disable-next-line:no-empty
-    ]).then(() => {});
+    ([grammar, teiSchemaGrammar, multipleNamespacesTree, percentToParseTree,
+      genericTree] =
+     await Promise.all([
+       util.fetchText("test/schemas/simplified-rng.js").then(readTreeFromJSON),
+       util.fetchText("test/schemas/tei-simplified-rng.js")
+         .then(readTreeFromJSON),
+       util.fetchText(
+         testFile("multiple_namespaces_on_same_node_converted.xml"))
+         .then((text) => parser.parse(text)),
+       util.fetchText(testFile("percent_to_parse_converted.xml"))
+         .then((text) => parser.parse(text)),
+       util.fetchText(testFile("to_parse_converted.xml"))
+         .then((text) => parser.parse(text)),
+       // tslint:disable-next-line:no-empty
+     ]));
   });
 
   const settings: (keyof Options)[] =
@@ -302,8 +304,10 @@ describe("Validator", () => {
 
   describe(!verbose ? "" : "second block", () => {
     let tree: Document;
-    before(() => util.fetchText(testFile("wildcard_converted.xml"))
-           .then((text) => tree = parser.parse(text)));
+    before(async () => {
+      tree =
+        parser.parse(await util.fetchText(testFile("wildcard_converted.xml")));
+    });
 
     function makeValidator(prefix?: string): Validator {
       return new Validator(grammar, tree, {
@@ -471,7 +475,7 @@ describe("Validator", () => {
       const el = tree.getElementsByTagName("head")[0];
       const evs = p.possibleAt(
         el.parentNode!,
-        _indexOf.call(el.parentNode!.childNodes, el) as number + 1);
+        _indexOf.call(el.parentNode!.childNodes, el) + 1);
       sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
     });
 
@@ -591,8 +595,7 @@ describe("Validator", () => {
       makeTest("after head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(
-          el.parentNode!,
-          _indexOf.call(el.parentNode!.childNodes, el) as number + 1,
+          el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el) + 1,
           false);
         const evs = walker.possible();
         sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
