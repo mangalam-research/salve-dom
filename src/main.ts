@@ -156,7 +156,6 @@ export interface Events {
   "reset-errors": ResetData;
   "state-update": WorkingStateData;
   "possible-due-to-wildcard-change": Node;
-  "*": any;
 }
 
 export interface CustomNodeProperties {

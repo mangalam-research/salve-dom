@@ -150,6 +150,20 @@ describe("Validator", () => {
       p.start();
     });
 
+    it("allows listening to *", (done) => {
+      const p = makeValidator(emptyTree);
+
+      // Manipulate stop so that we know when the work is done.
+      p.events.addEventListener("*", (_: string, ev: any) => {
+        assert.equal(ev.error.toString(),
+                     "tag required: {\"ns\":\"\",\"name\":\"html\"}");
+        assert.equal(ev.node, emptyTree);
+        done();
+      });
+
+      p.start();
+    });
+
     it("with actual contents", (done) => {
       const p = makeValidator(genericTree.cloneNode(true) as Document);
 
