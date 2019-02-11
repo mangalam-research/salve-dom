@@ -44,8 +44,7 @@ export interface Consuming<Events> {
   removeEventListener(
     eventName: "*", listener: GeneralListener<Events>): void;
 
-  removeAllListeners<T extends StringKeys<Events>>(eventName: T): void;
-  removeAllListeners(eventName: "*"): void;
+  removeAllListeners<T extends StringKeys<Events>>(eventName: T | "*"): void;
 }
 
 /**
@@ -180,9 +179,6 @@ export class EventEmitter<Events> implements Consuming<Events> {
    *
    * @param eventName The event whose listeners must all be removed.
    */
-  removeAllListeners<T extends StringKeys<Events>>(
-    eventName: T): void;
-  removeAllListeners(eventName: "*"): void;
   removeAllListeners<T extends StringKeys<Events>>(eventName: "*" | T): void {
     if (eventName === "*") {
       this._generalListeners = [];
