@@ -23,7 +23,7 @@ function _indexOf(parent: NodeList, needle: Node): number {
 const attrNodeType = Node.ATTRIBUTE_NODE;
 export const isAttr = attrNodeType !== undefined ?
   (it: Node): it is Attr => it.nodeType === attrNodeType :
-  (it: Node): it is Attr => it instanceof Attr;
+(it: Node): it is Attr => it instanceof Attr;
 
 // validation_stage values
 
@@ -479,188 +479,188 @@ export class Validator {
     while (true) { // tslint:disable-line: no-constant-condition
       let curEl = this._curEl;
       switch (stage) {
-      case Stage.START_TAG: {
-        // The logic is such that if we get here curEl must be an Element.
-        curEl = curEl as Element;
-        stack.unshift(new ProgressState(this._partDone, portion));
+        case Stage.START_TAG: {
+          // The logic is such that if we get here curEl must be an Element.
+          curEl = curEl as Element;
+          stack.unshift(new ProgressState(this._partDone, portion));
 
-        // Handle namespace declarations. Yes, this must happen before we deal
-        // with the tag name.
-        this._fireAndProcessEvent(walker, "enterContext", [], curEl, 0);
-        const attrIxLim = curEl.attributes.length;
-        for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
-          const attr = curEl.attributes[attrIx];
-          let uri: string | undefined;
-          if (attr.name === "xmlns") {
-            uri = "";
-          }
-          else if (attr.name.lastIndexOf("xmlns:", 0) === 0) {
-            uri = attr.name.slice(6);
-          }
+          // Handle namespace declarations. Yes, this must happen before we deal
+          // with the tag name.
+          this._fireAndProcessEvent(walker, "enterContext", [], curEl, 0);
+          const attrIxLim = curEl.attributes.length;
+          for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
+            const attr = curEl.attributes[attrIx];
+            let uri: string | undefined;
+            if (attr.name === "xmlns") {
+              uri = "";
+            }
+            else if (attr.name.lastIndexOf("xmlns:", 0) === 0) {
+              uri = attr.name.slice(6);
+            }
 
-          if (uri !== undefined) {
-            this._fireAndProcessEvent(walker, "definePrefix",
-                                      [uri, attr.value], curEl, 0);
-          }
-        }
-
-        const tagName = curEl.tagName;
-        // tslint:disable-next-line:no-non-null-assertion
-        const parent = curEl.parentNode!;
-        const curElIndex = _indexOf(parent.childNodes, curEl);
-        let ename = walker.nameResolver.resolveName(tagName, false);
-        if (ename === undefined) {
-          this._processEventResult(
-            [new ValidationError(`cannot resolve the name ${tagName}`)],
-            parent, curElIndex);
-          // This allows us to move forward. It will certainly cause a
-          // validation error, and send salve into its recovery mode for unknown
-          // elements.
-          ename = new EName("", tagName);
-        }
-
-        // Check whether this element is going to be allowed only due to a
-        // wildcard.
-        this._setPossibleDueToWildcard(curEl, walker, "enterStartTag",
-                                       ename.ns, ename.name);
-        this._fireAndProcessEvent(walker,
-                                  "enterStartTag", [ename.ns, ename.name],
-                                  parent, curElIndex);
-        this._setNodeProperty(curEl, "EventIndexBeforeAttributes",
-                              events.length);
-        this._fireAttributeEvents(walker, curEl);
-        this._setNodeProperty(curEl, "EventIndexAfterAttributes",
-                              events.length);
-
-        // Leave the start tag.
-        this._fireAndProcessEvent(walker, "leaveStartTag", [], curEl, 0);
-
-        stage = this._validationStage = Stage.CONTENTS;
-        this._setNodeProperty(curEl, "EventIndexAfterStart", events.length);
-        this._cycleEntered--;
-
-        return true; // state change
-        // break would be unreachable.
-      }
-      case Stage.CONTENTS: {
-        let node = (this._previousChild === null) ?
-          // starting from scratch
-          curEl.firstChild :
-          // already validation contents
-          this._previousChild.nextSibling;
-
-        let textAccumulator = "";
-        let textAccumulatorNode: Node | undefined;
-
-        const flushText = () => {
-          if (textAccumulator !== "") {
-            const eventResult = walker.fireEvent("text", [textAccumulator]);
-            if (eventResult instanceof Array) {
-              if (textAccumulatorNode === undefined) {
-                throw new Error("flushText running with undefined node");
-              }
-              // We are never without a parentNode here.
-              // tslint:disable-next-line:no-non-null-assertion
-              const parent = textAccumulatorNode.parentNode!;
-              this._processEventResult(
-                eventResult, parent,
-                _indexOf(parent.childNodes, textAccumulatorNode));
+            if (uri !== undefined) {
+              this._fireAndProcessEvent(walker, "definePrefix",
+                                        [uri, attr.value], curEl, 0);
             }
           }
-          textAccumulator = "";
-          textAccumulatorNode = undefined;
-        };
 
-        while (node !== null) {
-          switch (node.nodeType) {
-          case Node.TEXT_NODE:
-            // Salve does not allow multiple text events in a row. If text is
-            // encountered, then all the text must be passed to salve as a
-            // single event. We record the text and will flush it to salve
-            // later.
-            textAccumulator += (node as Text).data;
-            if (textAccumulatorNode === undefined) {
-              textAccumulatorNode = node;
-            }
-            break;
-          case Node.ELEMENT_NODE:
-            flushText();
-            portion /= curEl.childElementCount;
-            this._curEl = curEl = node as Element;
-            stage = this._validationStage = Stage.START_TAG;
-            this._previousChild = null;
-            continue stage_change;
-          case Node.COMMENT_NODE:
-            break; // We just skip over comment nodes.
-          default:
-            throw new Error(`unexpected node type: ${node.nodeType}`);
+          const tagName = curEl.tagName;
+          // tslint:disable-next-line:no-non-null-assertion
+          const parent = curEl.parentNode!;
+          const curElIndex = _indexOf(parent.childNodes, curEl);
+          let ename = walker.nameResolver.resolveName(tagName, false);
+          if (ename === undefined) {
+            this._processEventResult(
+              [new ValidationError(`cannot resolve the name ${tagName}`)],
+              parent, curElIndex);
+            // This allows us to move forward. It will certainly cause a
+            // validation error, and send salve into its recovery mode for unknown
+            // elements.
+            ename = new EName("", tagName);
           }
-          node = node.nextSibling;
-        }
 
-        flushText();
-        stage = this._validationStage = Stage.END_TAG;
-        break;
-      }
-      case Stage.END_TAG: {
-        // We've reached the end...
-        if (curEl === this.root) {
-          const eventResult = walker.end();
-          if (eventResult instanceof Array) {
-            this._processEventResult(eventResult, curEl,
-                                     curEl.childNodes.length);
-          }
-          this._runDocumentValidation();
-          this._setNodeProperty(curEl, "EventIndexAfter", events.length);
-          this._partDone = 1;
-          this._stop(this._errors.length > 0 ? WorkingState.INVALID :
-                     WorkingState.VALID);
+          // Check whether this element is going to be allowed only due to a
+          // wildcard.
+          this._setPossibleDueToWildcard(curEl, walker, "enterStartTag",
+                                         ename.ns, ename.name);
+          this._fireAndProcessEvent(walker,
+                                    "enterStartTag", [ename.ns, ename.name],
+                                    parent, curElIndex);
+          this._setNodeProperty(curEl, "EventIndexBeforeAttributes",
+                                events.length);
+          this._fireAttributeEvents(walker, curEl);
+          this._setNodeProperty(curEl, "EventIndexAfterAttributes",
+                                events.length);
+
+          // Leave the start tag.
+          this._fireAndProcessEvent(walker, "leaveStartTag", [], curEl, 0);
+
+          stage = this._validationStage = Stage.CONTENTS;
+          this._setNodeProperty(curEl, "EventIndexAfterStart", events.length);
           this._cycleEntered--;
 
-          return false;
+          return true; // state change
+          // break would be unreachable.
         }
+        case Stage.CONTENTS: {
+          let node = (this._previousChild === null) ?
+            // starting from scratch
+            curEl.firstChild :
+            // already validation contents
+            this._previousChild.nextSibling;
 
-        // we need it later
-        const originalElement = curEl;
-        const tagName = (curEl as Element).tagName;
-        let ename = walker.nameResolver.resolveName(tagName, false);
-        if (ename === undefined) {
-          // We just produce the name name we produced when we encountered the
-          // start tag.
-          ename = new EName("", tagName);
+          let textAccumulator = "";
+          let textAccumulatorNode: Node | undefined;
+
+          const flushText = () => {
+            if (textAccumulator !== "") {
+              const eventResult = walker.fireEvent("text", [textAccumulator]);
+              if (eventResult instanceof Array) {
+                if (textAccumulatorNode === undefined) {
+                  throw new Error("flushText running with undefined node");
+                }
+                // We are never without a parentNode here.
+                // tslint:disable-next-line:no-non-null-assertion
+                const parent = textAccumulatorNode.parentNode!;
+                this._processEventResult(
+                  eventResult, parent,
+                  _indexOf(parent.childNodes, textAccumulatorNode));
+              }
+            }
+            textAccumulator = "";
+            textAccumulatorNode = undefined;
+          };
+
+          while (node !== null) {
+            switch (node.nodeType) {
+              case Node.TEXT_NODE:
+                // Salve does not allow multiple text events in a row. If text is
+                // encountered, then all the text must be passed to salve as a
+                // single event. We record the text and will flush it to salve
+                // later.
+                textAccumulator += (node as Text).data;
+                if (textAccumulatorNode === undefined) {
+                  textAccumulatorNode = node;
+                }
+                break;
+              case Node.ELEMENT_NODE:
+                flushText();
+                portion /= curEl.childElementCount;
+                this._curEl = curEl = node as Element;
+                stage = this._validationStage = Stage.START_TAG;
+                this._previousChild = null;
+                continue stage_change;
+              case Node.COMMENT_NODE:
+                break; // We just skip over comment nodes.
+              default:
+                throw new Error(`unexpected node type: ${node.nodeType}`);
+            }
+            node = node.nextSibling;
+          }
+
+          flushText();
+          stage = this._validationStage = Stage.END_TAG;
+          break;
         }
-        this._fireAndProcessEvent(walker,
-                                  "endTag", [ename.ns, ename.name],
-                                  curEl, curEl.childNodes.length);
-        this._fireAndProcessEvent(walker, "leaveContext", [],
-                                  curEl, curEl.childNodes.length);
+        case Stage.END_TAG: {
+          // We've reached the end...
+          if (curEl === this.root) {
+            const eventResult = walker.end();
+            if (eventResult instanceof Array) {
+              this._processEventResult(eventResult, curEl,
+                                       curEl.childNodes.length);
+            }
+            this._runDocumentValidation();
+            this._setNodeProperty(curEl, "EventIndexAfter", events.length);
+            this._partDone = 1;
+            this._stop(this._errors.length > 0 ? WorkingState.INVALID :
+                       WorkingState.VALID);
+            this._cycleEntered--;
 
-        // Go back to the parent
-        this._previousChild = curEl;
-        // We are never without a parentNode here.
-        // tslint:disable-next-line:no-non-null-assertion
-        this._curEl = curEl = curEl.parentNode! as Element;
+            return false;
+          }
 
-        let nextDone = this._partDone;
-        if (curEl !== this.root) {
-          stack.shift();
-          const first = stack[0];
-          nextDone = first.partDone += portion;
-          portion = first.portion;
+          // we need it later
+          const originalElement = curEl;
+          const tagName = (curEl as Element).tagName;
+          let ename = walker.nameResolver.resolveName(tagName, false);
+          if (ename === undefined) {
+            // We just produce the name name we produced when we encountered the
+            // start tag.
+            ename = new EName("", tagName);
+          }
+          this._fireAndProcessEvent(walker,
+                                    "endTag", [ename.ns, ename.name],
+                                    curEl, curEl.childNodes.length);
+          this._fireAndProcessEvent(walker, "leaveContext", [],
+                                    curEl, curEl.childNodes.length);
+
+          // Go back to the parent
+          this._previousChild = curEl;
+          // We are never without a parentNode here.
+          // tslint:disable-next-line:no-non-null-assertion
+          this._curEl = curEl = curEl.parentNode! as Element;
+
+          let nextDone = this._partDone;
+          if (curEl !== this.root) {
+            stack.shift();
+            const first = stack[0];
+            nextDone = first.partDone += portion;
+            portion = first.portion;
+          }
+
+          this._setWorkingState(WorkingState.WORKING, nextDone);
+
+          this._setNodeProperty(originalElement, "EventIndexAfter",
+                                this._validationEvents.length);
+          stage = this._validationStage = Stage.CONTENTS;
+          this._cycleEntered--;
+
+          return true; // state_change
         }
-
-        this._setWorkingState(WorkingState.WORKING, nextDone);
-
-        this._setNodeProperty(originalElement, "EventIndexAfter",
-                              this._validationEvents.length);
-        stage = this._validationStage = Stage.CONTENTS;
-        this._cycleEntered--;
-
-        return true; // state_change
-      }
-        // break; would be unreachable
-      default:
-        throw new Error("unexpected state");
+          // break; would be unreachable
+        default:
+          throw new Error("unexpected state");
       }
     }
   }
@@ -1088,37 +1088,37 @@ export class Validator {
       }
       else {
         switch (container.nodeType) {
-        case Node.TEXT_NODE:
-          toInspect = (container as any).previousElementSibling;
-          if (toInspect === null) {
-            // tslint:disable-next-line:no-non-null-assertion
-            toInspect = container.parentNode!;
-            dataKey = "EventIndexAfterStart";
-          }
-          break;
-        case Node.ELEMENT_NODE:
-        case Node.DOCUMENT_FRAGMENT_NODE:
-        case Node.DOCUMENT_NODE:
-          const node = container.childNodes[index];
+          case Node.TEXT_NODE:
+            toInspect = (container as any).previousElementSibling;
+            if (toInspect === null) {
+              // tslint:disable-next-line:no-non-null-assertion
+              toInspect = container.parentNode!;
+              dataKey = "EventIndexAfterStart";
+            }
+            break;
+          case Node.ELEMENT_NODE:
+          case Node.DOCUMENT_FRAGMENT_NODE:
+          case Node.DOCUMENT_NODE:
+            const node = container.childNodes[index];
 
-          const prev = node === undefined ?
-            (container as Element).lastElementChild :
-            // It may not be an element, in which case we get "undefined".
-            (node as Element).previousElementSibling;
+            const prev = node === undefined ?
+              (container as Element).lastElementChild :
+              // It may not be an element, in which case we get "undefined".
+              (node as Element).previousElementSibling;
 
-          if (attributes) {
-            dataKey = "EventIndexAfterAttributes";
-            toInspect = node;
-          }
-          else if (prev !== null) {
-            toInspect = prev;
-          }
-          else {
-            dataKey = "EventIndexAfterStart";
-          }
-          break;
-        default:
-          throw new Error(`unexpected node type: ${container.nodeType}`);
+            if (attributes) {
+              dataKey = "EventIndexAfterAttributes";
+              toInspect = node;
+            }
+            else if (prev !== null) {
+              toInspect = prev;
+            }
+            else {
+              dataKey = "EventIndexAfterStart";
+            }
+            break;
+          default:
+            throw new Error(`unexpected node type: ${container.nodeType}`);
         }
       }
     }
@@ -1210,83 +1210,83 @@ export class Validator {
     }
     else {
       switch (container.nodeType) {
-      case Node.TEXT_NODE: {
-        const prev = (container as Text).previousElementSibling;
-        let getFrom;
-        let propName: "EventIndexAfter" | "EventIndexAfterStart";
-        if (prev !== null) {
-          getFrom = prev;
-          propName = "EventIndexAfter";
-        }
-        else {
-          // tslint:disable-next-line:no-non-null-assertion
-          getFrom = container.parentNode!;
-          propName = "EventIndexAfterStart";
-        }
-        // tslint:disable-next-line:no-non-null-assertion
-        walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
-
-        // We will attempt to fire a text event if our location is inside the
-        // current text node.
-        //
-        // A previous version of this code was also checking whether there is a
-        // text node between this text node and prev but this cannot happen
-        // because the tree on which validation is performed cannot have two
-        // adjacent text nodes. It was also checking whether there was a _text
-        // element between prev and this text node but this also cannot happen.
-        if (index > 0) {
-          walker = walker.clone();
-          fireTextEvent(container as Text);
-        }
-        break;
-      }
-      case Node.ELEMENT_NODE:
-      case Node.DOCUMENT_NODE:
-      case Node.DOCUMENT_FRAGMENT_NODE: {
-        const node = container.childNodes[index];
-        let prev;
-        let getFrom;
-        let propName: CustomNodeProperty;
-        if (!attributes) {
-          prev = node === undefined ? (container as Element).lastElementChild :
-            (node as Element).previousElementSibling;
-
+        case Node.TEXT_NODE: {
+          const prev = (container as Text).previousElementSibling;
+          let getFrom;
+          let propName: "EventIndexAfter" | "EventIndexAfterStart";
           if (prev !== null) {
             getFrom = prev;
             propName = "EventIndexAfter";
           }
           else {
-            getFrom = container;
+            // tslint:disable-next-line:no-non-null-assertion
+            getFrom = container.parentNode!;
             propName = "EventIndexAfterStart";
           }
-        }
-        else {
-          getFrom = node;
-          propName = "EventIndexAfterAttributes";
-        }
+          // tslint:disable-next-line:no-non-null-assertion
+          walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
 
-        // tslint:disable-next-line:no-non-null-assertion
-        walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
+          // We will attempt to fire a text event if our location is inside the
+          // current text node.
+          //
+          // A previous version of this code was also checking whether there is a
+          // text node between this text node and prev but this cannot happen
+          // because the tree on which validation is performed cannot have two
+          // adjacent text nodes. It was also checking whether there was a _text
+          // element between prev and this text node but this also cannot happen.
+          if (index > 0) {
+            walker = walker.clone();
+            fireTextEvent(container as Text);
+          }
+          break;
+        }
+        case Node.ELEMENT_NODE:
+        case Node.DOCUMENT_NODE:
+        case Node.DOCUMENT_FRAGMENT_NODE: {
+          const node = container.childNodes[index];
+          let prev;
+          let getFrom;
+          let propName: CustomNodeProperty;
+          if (!attributes) {
+            prev = node === undefined ? (container as Element).lastElementChild :
+              (node as Element).previousElementSibling;
 
-        if (!attributes) {
-          // We will attempt to fire a text event if another text node appeared
-          // between the node we care about and the element just before it.
-          const prevSibling = node != null ? node.previousSibling : null;
-          if (prevSibling !== null &&
-              // If the previous sibling is the same as the previous *element*
-              // sibbling, then there is nothing *between* that we need to take
-              // care of.
-              prevSibling !== prev) {
-            if (prevSibling.nodeType === Node.TEXT_NODE) {
-              walker = walker.clone();
-              fireTextEvent(prevSibling as Text);
+            if (prev !== null) {
+              getFrom = prev;
+              propName = "EventIndexAfter";
+            }
+            else {
+              getFrom = container;
+              propName = "EventIndexAfterStart";
             }
           }
+          else {
+            getFrom = node;
+            propName = "EventIndexAfterAttributes";
+          }
+
+          // tslint:disable-next-line:no-non-null-assertion
+          walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
+
+          if (!attributes) {
+            // We will attempt to fire a text event if another text node appeared
+            // between the node we care about and the element just before it.
+            const prevSibling = node != null ? node.previousSibling : null;
+            if (prevSibling !== null &&
+                // If the previous sibling is the same as the previous *element*
+                // sibbling, then there is nothing *between* that we need to take
+                // care of.
+                prevSibling !== prev) {
+              if (prevSibling.nodeType === Node.TEXT_NODE) {
+                walker = walker.clone();
+                fireTextEvent(prevSibling as Text);
+              }
+            }
+          }
+          break;
         }
-        break;
-      }
-      default:
-        throw new Error(`unexpected node type: ${container.nodeType}`);
+        default:
+          throw new Error(`unexpected node type: ${container.nodeType}`);
       }
     }
 
