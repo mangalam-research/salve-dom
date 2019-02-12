@@ -25,7 +25,7 @@ export const isAttr = attrNodeType !== undefined ?
   (it: Node): it is Attr => it.nodeType === attrNodeType :
 (it: Node): it is Attr => it instanceof Attr;
 
-// validation_stage values
+// validationStage values
 
 const enum Stage {
   START_TAG = 1,
