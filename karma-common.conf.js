@@ -41,7 +41,7 @@ module.exports = (config) => {
         inlineSources: true,
       },
     },
-    reporters: ["progress"],
+    reporters: ["mocha"],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
