@@ -4,7 +4,7 @@
  * @license MPL 2.0
  * @copyright Mangalam Research Center for Buddhist Languages
  */
-import { ConcreteName, DefaultNameResolver, EName, Event, EventSet, Grammar,
+import { ConcreteName, DefaultNameResolver, EName, EventSet, Grammar,
          GrammarWalker, ValidationError } from "salve";
 import { Consuming, EventEmitter } from "./event_emitter";
 import { fixPrototype } from "./tools";
@@ -109,10 +109,10 @@ function isPossibleDueToWildcard(walker: GrammarWalker<DefaultNameResolver>,
   const evs = walker.possible();
   let matched = false;
   for (const ev of evs) {
-    if (ev.params[0] !== eventName) {
+    if (ev.name !== eventName) {
       continue;
     }
-    const namePattern = ev.params[1] as ConcreteName;
+    const { namePattern } = ev;
     if (namePattern.match(ns, name)) {
       // We already know that it matches, and this is not merely due to a
       // wildcard.
@@ -1409,31 +1409,24 @@ export class Validator {
    *
    * @param container A node.
    *
-   * @param event The event to search for. The event should contain the same
-   * data as would be passed to ``fireEvent``. Specifically, name patterns may
-   * not be used in the event passed to this method.
+   * @param name The name of the event to search for.
+   *
+   * @param params The parameters of the event to search for. The the same data
+   * as would be passed to ``fireEvent``.
    *
    * @returns The locations in ``container`` where the event is possible.
    */
-  possibleWhere(container: Node, event: Event): number[] {
+  possibleWhere(container: Node, name: string, ...params: string[]): number[] {
     const ret = [];
-    const params = event.params as string[];
 
-    for (const param of params) {
-      if (typeof param !== "string") {
-        throw new Error("this method does not accept event with name \
-patterns: convert the pattern to a uri, localPart pair");
-      }
-    }
-
-    const name = params[0];
     if (name === "startTagAndAttributes" || name === "attributeNameAndValue") {
       throw new Error(`this method does not support ${name}: \
 you must use granular events instead`);
     }
 
-    const eventString = event.toString();
-    const hasNamePattern = name === "enterStartTag" || name === "attributeName";
+    const paramString = params.toString();
+    const hasNamePattern = name === "enterStartTag" ||
+      name === "attributeName" || name === "endTag";
     for (let index = 0; index <= container.childNodes.length; ++index) {
       const possible = this.possibleAt(container, index);
       if (hasNamePattern) {
@@ -1445,9 +1438,8 @@ you must use granular events instead`);
         // that started the current element. This is why we do not use this
         // branch to test for it.)
         for (const candidate of possible) {
-          if (candidate.params[0] === name &&
-              (candidate.params[1] as ConcreteName).match(params[1],
-                                                          params[2])) {
+          if (candidate.name === name &&
+              (candidate.param as ConcreteName).match(params[0], params[1])) {
             ret.push(index);
             break;
           }
@@ -1455,7 +1447,8 @@ you must use granular events instead`);
       }
       else {
         for (const candidate of possible) {
-          if (candidate.toString() === eventString) {
+          if (candidate.name === name &&
+              candidate.params.toString() === paramString) {
             ret.push(index);
             break;
           }

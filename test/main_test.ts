@@ -9,8 +9,9 @@ import { ErrorData, isAttr, Options, ParsingError, ResetData, safeParse,
             no-submodule-imports */
          Validator, WorkingState as WS, WorkingStateData } from "dist/lib/main";
 import "mocha";
-import { DefaultNameResolver, EName, Event, EventSet, Grammar,
-         GrammarWalker, Name, readTreeFromJSON } from "salve";
+import { DefaultNameResolver, EName, EndTagEvent, EnterStartTagEvent, Event,
+         EventSet, Grammar, GrammarWalker, LeaveStartTagEvent, Name,
+         readTreeFromJSON, TextEvent } from "salve";
 import * as util from "./util";
 
 const assert = chai.assert;
@@ -410,7 +411,7 @@ describe("Validator", () => {
 
     makeTest("empty document, at root", (p) => {
       const evs = p.possibleAt(emptyTree, 0);
-      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
+      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
     },
              emptyTree);
 
@@ -429,7 +430,7 @@ describe("Validator", () => {
 
     makeTest("with actual contents, at root", (p, tree) => {
       const evs = p.possibleAt(tree, 0);
-      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
+      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
     });
 
     makeTest("with actual contents, at end", (p, tree) => {
@@ -439,12 +440,12 @@ describe("Validator", () => {
 
     makeTest("with actual contents, start of html", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("html")[0], 0);
-      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "head"))]);
+      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
     });
 
     makeTest("with actual contents, start of head", (p, tree) => {
       const evs = p.possibleAt(tree.getElementsByTagName("head")[0], 0);
-      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "title"))]);
+      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "title"))]);
     });
 
     makeTest("with actual contents, start of title (start of text node)",
@@ -454,8 +455,8 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 0);
-               sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                                new Event("text", /^[^]*$/)]);
+               sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                                new TextEvent(/^[^]*$/)]);
              });
 
     makeTest("with actual contents, index inside text node",
@@ -465,21 +466,21 @@ describe("Validator", () => {
                // Make sure we know what we are looking at.
                assert.equal(el.nodeType, Node.TEXT_NODE);
                const evs = p.possibleAt(el, 1);
-               sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                                new Event("text", /^[^]*$/)]);
+               sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                                new TextEvent(/^[^]*$/)]);
              });
 
     makeTest("with actual contents, end of title", (p, tree) => {
       const title = tree.getElementsByTagName("title")[0];
       const evs = p.possibleAt(title, title.childNodes.length);
-      sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                       new Event("text", /^[^]*$/)]);
+      sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                       new TextEvent(/^[^]*$/)]);
     });
 
     makeTest("with actual contents, end of head", (p, tree) => {
       const el = tree.getElementsByTagName("head")[0];
       const evs = p.possibleAt(el, el.childNodes.length);
-      sameEvents(evs, [new Event("endTag", new Name("", "", "head"))]);
+      sameEvents(evs, [new EndTagEvent(new Name("", "", "head"))]);
     });
 
     makeTest("with actual contents, after head", (p, tree) => {
@@ -487,12 +488,12 @@ describe("Validator", () => {
       const evs = p.possibleAt(
         el.parentNode!,
         _indexOf.call(el.parentNode!.childNodes, el) + 1);
-      sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
+      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "body"))]);
     });
 
     makeTest("with actual contents, attributes on root", (p, tree) => {
       const evs = p.possibleAt(tree, 0, true);
-      sameEvents(evs, [new Event("leaveStartTag")]);
+      sameEvents(evs, [new LeaveStartTagEvent()]);
     });
 
     makeTest("with actual contents, attributes on element", (p, tree) => {
@@ -500,7 +501,7 @@ describe("Validator", () => {
       const evs = p.possibleAt(el.parentNode!,
                                _indexOf.call(el.parentNode!.childNodes, el),
                                true);
-      sameEvents(evs, [new Event("leaveStartTag")]);
+      sameEvents(evs, [new LeaveStartTagEvent()]);
     });
   });
 
@@ -534,14 +535,14 @@ describe("Validator", () => {
           const walker = reveal(p)._getWalkerAt(tree, 0, false);
           const evs = walker.possible();
           sameEvents(evs,
-                     [new Event("enterStartTag", new Name("", "", "html"))]);
+                     [new EnterStartTagEvent(new Name("", "", "html"))]);
         },
         emptyTree);
 
       makeTest("at root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "html"))]);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
       });
 
       makeTest("at end", (p, tree) => {
@@ -555,7 +556,7 @@ describe("Validator", () => {
           reveal(p)._getWalkerAt(tree.getElementsByTagName("html")[0],
                                  0, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "head"))]);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
       });
 
       makeTest("start of head", (p, tree) => {
@@ -564,7 +565,7 @@ describe("Validator", () => {
                                  0, false);
         const evs = walker.possible();
         sameEvents(evs,
-                   [new Event("enterStartTag", new Name("", "", "title"))]);
+                   [new EnterStartTagEvent(new Name("", "", "title"))]);
       });
 
       makeTest("start of title (start of text node)", (p, tree) => {
@@ -573,8 +574,8 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 0, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                         new Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
       });
 
       makeTest("index inside text node", (p, tree) => {
@@ -583,8 +584,8 @@ describe("Validator", () => {
         assert.equal(el.nodeType, Node.TEXT_NODE);
         const walker = reveal(p)._getWalkerAt(el, 1, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                         new Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
       });
 
       makeTest("end of title", (p, tree) => {
@@ -592,15 +593,15 @@ describe("Validator", () => {
         const walker =
           reveal(p)._getWalkerAt(title, title.childNodes.length, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("endTag", new Name("", "", "title")),
-                         new Event("text", /^[^]*$/)]);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
       });
 
       makeTest("end of head", (p, tree) => {
         const el = tree.getElementsByTagName("head")[0];
         const walker = reveal(p)._getWalkerAt(el, el.childNodes.length, false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("endTag", new Name("", "", "head"))]);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "head"))]);
       });
 
       makeTest("after head", (p, tree) => {
@@ -609,13 +610,13 @@ describe("Validator", () => {
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el) + 1,
           false);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("enterStartTag", new Name("", "", "body"))]);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "body"))]);
       });
 
       makeTest("attributes on root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, true);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("leaveStartTag")]);
+        sameEvents(evs, [new LeaveStartTagEvent()]);
       });
 
       makeTest("attributes on element", (p, tree) => {
@@ -623,7 +624,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("leaveStartTag")]);
+        sameEvents(evs, [new LeaveStartTagEvent()]);
       });
 
       makeTest("attributes on element with prev sibling", (p, tree) => {
@@ -634,7 +635,7 @@ describe("Validator", () => {
         const walker = reveal(p)._getWalkerAt(
           el.parentNode!, _indexOf.call(el.parentNode!.childNodes, el), true);
         const evs = walker.possible();
-        sameEvents(evs, [new Event("leaveStartTag")]);
+        sameEvents(evs, [new LeaveStartTagEvent()]);
       });
     });
 
@@ -803,26 +804,26 @@ describe("Validator", () => {
 
     makeTest("multiple locations", (p, tree) => {
       const el = tree.querySelector("body");
-      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "em"));
+      const locs = p.possibleWhere(el!, "enterStartTag", "", "em");
       assert.sameMembers(locs, [0, 1, 2, 3]);
     });
 
     makeTest("no locations", (p, tree) => {
       const el = tree.querySelector("title");
       const locs =
-        p.possibleWhere(el!, new Event("enterStartTag", "", "impossible"));
+        p.possibleWhere(el!, "enterStartTag", "", "impossible");
       assert.sameMembers(locs, []);
     });
 
     makeTest("one location", (p, tree) => {
       const el = tree.querySelector("html");
-      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "body"));
+      const locs = p.possibleWhere(el!, "enterStartTag", "", "body");
       assert.sameMembers(locs, [2, 3]);
     });
 
     makeTest("empty element", (p, tree) => {
       const el = tree.querySelector("em em");
-      const locs = p.possibleWhere(el!, new Event("enterStartTag", "", "em"));
+      const locs = p.possibleWhere(el!, "enterStartTag", "", "em");
       assert.sameMembers(locs, [0]);
     });
 
@@ -831,8 +832,7 @@ describe("Validator", () => {
       // The way the schema is structured, the following element can match only
       // due to a wildcard. So the code of possibleWhere has to check every
       // possibility one by one rather than use ``.has`` on the event set.
-      const locs =
-        p.possibleWhere(el!, new Event("enterStartTag", "uri", "foreign"));
+      const locs = p.possibleWhere(el!, "enterStartTag", "uri", "foreign");
       assert.sameMembers(locs, [0, 1, 2, 3]);
     });
   });
