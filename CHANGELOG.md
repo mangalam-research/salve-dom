@@ -1,3 +1,21 @@
+<a name="6.0.0"></a>
+# [6.0.0](https://github.com/mangalam-research/salve-dom/compare/v5.0.1...v6.0.0) (2019-02-18)
+
+
+### Features
+
+* support more DOM node types (commments, pi, etc.) ([e28ce1e](https://github.com/mangalam-research/salve-dom/commit/e28ce1e))
+* upgrade to latest salve ([2d2e64e](https://github.com/mangalam-research/salve-dom/commit/2d2e64e))
+
+
+### BREAKING CHANGES
+
+* possibleWhere no longer takes an ``Event`` object to specify
+which event to look for. Instead it takes a pair of name and params like
+``fireEvent`` does in salve.
+
+
+
 <a name="5.0.1"></a>
 ## [5.0.1](https://github.com/mangalam-research/salve-dom/compare/v5.0.0...v5.0.1) (2018-09-24)
 

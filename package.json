@@ -1,6 +1,6 @@
 {
   "name": "salve-dom",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "description": "A library for validating DOM trees according to a Relax NG schema.",
   "main": "salve-dom.min.js",
   "private": true,
