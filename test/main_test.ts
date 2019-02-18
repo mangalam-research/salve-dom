@@ -15,6 +15,7 @@ import { DefaultNameResolver, EName, EndTagEvent, EnterStartTagEvent, Event,
 import * as util from "./util";
 
 const assert = chai.assert;
+const expect = chai.expect;
 
 function testFile(name: string): string {
   return `build/test-files/${name}`;
@@ -49,9 +50,8 @@ function onCompletion(p: Validator, cb: () => void): void {
 const verbose = false;
 
 function sameEvents(evs: EventSet, expected: Event[]): void {
-  assert.sameMembers(
-    Array.from(evs).map((x) => x.toString()),
-    expected.map((x) => x.toString()));
+  expect(Array.from(evs).map((x) => x.toString())).to.have
+    .members(expected.map((x) => x.toString()));
 }
 
 describe("Validator", () => {
@@ -63,6 +63,7 @@ describe("Validator", () => {
   let genericTree: Document;
   let multipleNamespacesTree: Document;
   let percentToParseTree: Document;
+  let moreNodeTypes: Document;
 
   before(async function before(): Promise<void> {
     // We have a high timeout here because IE11 on Browser Stack often takes
@@ -73,7 +74,7 @@ describe("Validator", () => {
     emptyTree = util.getEmptyTree();
 
     ([grammar, teiSchemaGrammar, multipleNamespacesTree, percentToParseTree,
-      genericTree] =
+      genericTree, moreNodeTypes] =
      await Promise.all([
        util.fetchText("test/schemas/simplified-rng.js").then(readTreeFromJSON),
        util.fetchText("test/schemas/tei-simplified-rng.js")
@@ -85,7 +86,8 @@ describe("Validator", () => {
          .then((text) => parser.parse(text)),
        util.fetchText(testFile("to_parse_converted.xml"))
          .then((text) => parser.parse(text)),
-       // tslint:disable-next-line:no-empty
+       util.fetchText(testFile("more_node_types_converted.xml"))
+         .then((text) => parser.parse(text)),
      ]));
   });
 
@@ -164,6 +166,18 @@ describe("Validator", () => {
 
     it("with actual contents", (done) => {
       const p = makeValidator(genericTree.cloneNode(true) as Document);
+
+      onCompletion(p, () => {
+        assert.equal(p.getWorkingState().state, WS.VALID);
+        assert.equal(p.errors.length, 0);
+        done();
+      });
+
+      p.start();
+    });
+
+    it("with all node types", (done) => {
+      const p = makeValidator(moreNodeTypes.cloneNode(true) as Document);
 
       onCompletion(p, () => {
         assert.equal(p.getWorkingState().state, WS.VALID);
@@ -394,16 +408,11 @@ describe("Validator", () => {
 
     function makeTest(name: string,
                       stopFn: (p: Validator, tree: Document | Element) => void,
-                      top?: Document | Element | (() => Document | Element),
+                      top?: () => Document | Element,
                       only: boolean = false): void {
       (only ? it.only : it)(name, () => {
-        // tslint:disable-next-line:strict-boolean-expressions
-        if (top instanceof Function) {
-          // tslint:disable-next-line:no-parameter-reassignment
-          top = top();
-        }
-        const tree =
-          top !== undefined ? top : genericTree.cloneNode(true) as Document;
+        const tree = (top !== undefined ? top().cloneNode(true) :
+                      genericTree.cloneNode(true)) as Document;
         const p = new Validator(grammar, tree);
         stopFn(p, tree);
       });
@@ -413,13 +422,13 @@ describe("Validator", () => {
       const evs = p.possibleAt(emptyTree, 0);
       sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
     },
-             emptyTree);
+             () => emptyTree);
 
     // There was an earlier problem by which using _getWalkerAt could
     // cause errors to get recorded more than once.
-    makeTest("does not duplicate errors", (p) => {
+    makeTest("does not duplicate errors", (p, tree) => {
       assert.equal(p.errors.length, 0);
-      const em = badTree.getElementsByTagName("em")[0];
+      const em = tree.getElementsByTagName("em")[0];
       const xxx = em.getAttributeNode("xxx")!;
       p.possibleAt(xxx, 0);
       assert.equal(p.errors.length, 1);
@@ -428,80 +437,183 @@ describe("Validator", () => {
     },
              () => badTree);
 
-    makeTest("with actual contents, at root", (p, tree) => {
-      const evs = p.possibleAt(tree, 0);
-      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
+    describe("with actual contents", () => {
+      makeTest("at root", (p, tree) => {
+        const evs = p.possibleAt(tree, 0);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
+      });
+
+      makeTest("at end", (p, tree) => {
+        const evs = p.possibleAt(tree, 1);
+        assert.equal(evs.size, 0);
+      });
+
+      makeTest("start of html", (p, tree) => {
+        const evs = p.possibleAt(tree.getElementsByTagName("html")[0], 0);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
+      });
+
+      makeTest("start of head", (p, tree) => {
+        const evs = p.possibleAt(tree.getElementsByTagName("head")[0], 0);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "title"))]);
+      });
+
+      makeTest("start of title (start of text node)", (p, tree) => {
+        const el = tree.getElementsByTagName("title")[0].firstChild as Text;
+        // Make sure we know what we are looking at.
+        assert.equal(el.nodeType, Node.TEXT_NODE);
+        const evs = p.possibleAt(el, 0);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
+
+      makeTest("index inside text node", (p, tree) => {
+        const el = tree.getElementsByTagName("title")[0].firstChild as Text;
+        // Make sure we know what we are looking at.
+        assert.equal(el.nodeType, Node.TEXT_NODE);
+        const evs = p.possibleAt(el, 1);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
+
+      makeTest("end of title", (p, tree) => {
+        const title = tree.getElementsByTagName("title")[0];
+        const evs = p.possibleAt(title, title.childNodes.length);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
+
+      makeTest("end of head", (p, tree) => {
+        const el = tree.getElementsByTagName("head")[0];
+        const evs = p.possibleAt(el, el.childNodes.length);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "head"))]);
+      });
+
+      makeTest("after head", (p, tree) => {
+        const el = tree.getElementsByTagName("head")[0];
+        const evs = p.possibleAt(
+          el.parentNode!,
+          _indexOf.call(el.parentNode!.childNodes, el) + 1);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "body"))]);
+      });
+
+      makeTest("attributes on root", (p, tree) => {
+        const evs = p.possibleAt(tree, 0, true);
+        sameEvents(evs, [new LeaveStartTagEvent()]);
+      });
+
+      makeTest("attributes on element", (p, tree) => {
+        const el = tree.getElementsByTagName("head")[0];
+        const evs = p.possibleAt(el.parentNode!,
+                                 _indexOf.call(el.parentNode!.childNodes, el),
+                                 true);
+        sameEvents(evs, [new LeaveStartTagEvent()]);
+      });
     });
 
-    makeTest("with actual contents, at end", (p, tree) => {
-      const evs = p.possibleAt(tree, 1);
-      assert.equal(evs.size, 0);
-    });
+    describe("with various node types", () => {
+      function makeCommentTest(name: string,
+                               stopFn: (p: Validator, parent: Node,
+                                        index: number, comment: Node) => void,
+                               only: boolean = false): void {
+        makeTest(name, (p, tree) => {
+          const title = tree.getElementsByTagName("title")[0];
+          const index = 1;
+          const comment = title.childNodes[index];
+          expect(comment).to.have.property("nodeType").equal(Node.COMMENT_NODE);
+          stopFn(p, title, index, comment);
+        },
+                 () => moreNodeTypes,
+                 only);
+      }
 
-    makeTest("with actual contents, start of html", (p, tree) => {
-      const evs = p.possibleAt(tree.getElementsByTagName("html")[0], 0);
-      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
-    });
+      makeCommentTest("before comment", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
 
-    makeTest("with actual contents, start of head", (p, tree) => {
-      const evs = p.possibleAt(tree.getElementsByTagName("head")[0], 0);
-      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "title"))]);
-    });
+      makeCommentTest("after comment", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index + 1);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
 
-    makeTest("with actual contents, start of title (start of text node)",
-             (p, tree) => {
-               const el =
-                 tree.getElementsByTagName("title")[0].firstChild as Text;
-               // Make sure we know what we are looking at.
-               assert.equal(el.nodeType, Node.TEXT_NODE);
-               const evs = p.possibleAt(el, 0);
-               sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
-                                new TextEvent(/^[^]*$/)]);
-             });
+      makeCommentTest("in comment", (p, _parent, _index, comment) => {
+        const evs = p.possibleAt(comment, 0);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
+                         new TextEvent(/^[^]*$/)]);
+      });
 
-    makeTest("with actual contents, index inside text node",
-             (p, tree) => {
-               const el =
-                 tree.getElementsByTagName("title")[0].firstChild as Text;
-               // Make sure we know what we are looking at.
-               assert.equal(el.nodeType, Node.TEXT_NODE);
-               const evs = p.possibleAt(el, 1);
-               sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
-                                new TextEvent(/^[^]*$/)]);
-             });
+      function makePITest(name: string,
+                          stopFn: (p: Validator, parent: Node,
+                                   index: number, pi: Node) => void,
+                          only: boolean = false): void {
+        makeTest(name, (p, tree) => {
+          const html = tree.getElementsByTagName("html")[0];
+          const index = 1;
+          const pi = html.childNodes[index];
+          expect(pi).to.have.property("nodeType")
+            .equal(Node.PROCESSING_INSTRUCTION_NODE);
+          stopFn(p, html, index, pi);
+        },
+                 () => moreNodeTypes,
+                 only);
+      }
 
-    makeTest("with actual contents, end of title", (p, tree) => {
-      const title = tree.getElementsByTagName("title")[0];
-      const evs = p.possibleAt(title, title.childNodes.length);
-      sameEvents(evs, [new EndTagEvent(new Name("", "", "title")),
-                       new TextEvent(/^[^]*$/)]);
-    });
+      makePITest("before pi", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
+      });
 
-    makeTest("with actual contents, end of head", (p, tree) => {
-      const el = tree.getElementsByTagName("head")[0];
-      const evs = p.possibleAt(el, el.childNodes.length);
-      sameEvents(evs, [new EndTagEvent(new Name("", "", "head"))]);
-    });
+      makePITest("after pi", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index + 1);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
+      });
 
-    makeTest("with actual contents, after head", (p, tree) => {
-      const el = tree.getElementsByTagName("head")[0];
-      const evs = p.possibleAt(
-        el.parentNode!,
-        _indexOf.call(el.parentNode!.childNodes, el) + 1);
-      sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "body"))]);
-    });
+      makePITest("in pi", (p, _parent, _index, pi) => {
+        const evs = p.possibleAt(pi, 0);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "head"))]);
+      });
 
-    makeTest("with actual contents, attributes on root", (p, tree) => {
-      const evs = p.possibleAt(tree, 0, true);
-      sameEvents(evs, [new LeaveStartTagEvent()]);
-    });
+      function makeCDATATest(name: string,
+                             stopFn: (p: Validator, parent: Node,
+                                      index: number, cdata: Node) => void,
+                             only: boolean = false): void {
+        makeTest(name, (p, tree) => {
+          const html = tree.getElementsByTagName("em")[0];
+          const index = 1;
+          const cdata = html.childNodes[index];
+          expect(cdata).to.have.property("nodeType")
+            .equal(Node.CDATA_SECTION_NODE);
+          stopFn(p, html, index, cdata);
+        },
+                 () => moreNodeTypes,
+                 only);
+      }
 
-    makeTest("with actual contents, attributes on element", (p, tree) => {
-      const el = tree.getElementsByTagName("head")[0];
-      const evs = p.possibleAt(el.parentNode!,
-                               _indexOf.call(el.parentNode!.childNodes, el),
-                               true);
-      sameEvents(evs, [new LeaveStartTagEvent()]);
+      makeCDATATest("before cdata", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "em")),
+                         new EnterStartTagEvent(new Name("", "", "em")),
+                         new TextEvent(/^[^]*$/)]);
+      });
+
+      makeCDATATest("after cdata", (p, parent, index) => {
+        const evs = p.possibleAt(parent, index + 1);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "em")),
+                         // Yes, possibleAt can return duplicate events.
+                         new EnterStartTagEvent(new Name("", "", "em")),
+                         new EnterStartTagEvent(new Name("", "", "em")),
+                         new TextEvent(/^[^]*$/)]);
+      });
+
+      makeCDATATest("in cdata", (p, _parent, _index, cdata) => {
+        const evs = p.possibleAt(cdata, 1);
+        sameEvents(evs, [new EndTagEvent(new Name("", "", "em")),
+                         new EnterStartTagEvent(new Name("", "", "em")),
+                         new TextEvent(/^[^]*$/)]);
+      });
     });
   });
 
@@ -519,10 +631,10 @@ describe("Validator", () => {
 
     function makeTest(name: string,
                       stopFn: (p: Validator, tree: Document | Element) => void,
-                      top?: Document | Element): void {
+                      top?: () => (Document | Element)): void {
       it(name, () => {
-        // tslint:disable-next-line:strict-boolean-expressions
-        const tree = top || genericTree.cloneNode(true) as Document;
+        const tree = (top !== undefined ? top().cloneNode(true) :
+                      genericTree.cloneNode(true)) as Document;
         const p = new Validator(grammar, tree);
         stopFn(p, tree);
       });
@@ -537,7 +649,7 @@ describe("Validator", () => {
           sameEvents(evs,
                      [new EnterStartTagEvent(new Name("", "", "html"))]);
         },
-        emptyTree);
+        () => emptyTree);
 
       makeTest("at root", (p, tree) => {
         const walker = reveal(p)._getWalkerAt(tree, 0, false);
@@ -649,11 +761,9 @@ describe("Validator", () => {
       // tslint:disable-next-line:no-shadowed-variable
       function makeTest(name: string,
                         stopFn: (p: Validator,
-                                 tree: Document | Element) => void,
-                        top?: Document | Element): void {
+                                 tree: Document | Element) => void): void {
         it(name, () => {
-          // tslint:disable-next-line:strict-boolean-expressions
-          const tree = top || defaultTree.cloneNode(true) as Document;
+          const tree = defaultTree.cloneNode(true) as Document;
           const p = new Validator(teiSchemaGrammar, tree);
           stopFn(p, tree);
         });
@@ -691,10 +801,10 @@ describe("Validator", () => {
       function makeTest(name: string,
                         stopFn: (p: Validator, revealed: Reveal,
                                  tree: Document | Element) => void,
-                        top?: Document | Element): void {
+                        top?: () => (Document | Element)): void {
         it(name, () => {
-          // tslint:disable-next-line:strict-boolean-expressions
-          const tree = top || dataTree.cloneNode(true) as Document;
+          const tree = (top !== undefined ? top().cloneNode(true) :
+                        dataTree.cloneNode(true)) as Document;
           const p = new Validator(grammar, tree);
           assert.equal(Object.keys((p as any)._walkerCache).length, 0);
           assert.equal((p as any)._walkerCacheMax, -1);
@@ -713,7 +823,7 @@ describe("Validator", () => {
           assert.equal(revealed._walkerCacheMax, -1);
           assert.equal(Object.keys(revealed._walkerCache).length, 0);
         },
-        emptyTree);
+        () => emptyTree);
 
       makeTest("but not the final location", (_p, revealed, tree) => {
         revealed._getWalkerAt(tree, -1, false);

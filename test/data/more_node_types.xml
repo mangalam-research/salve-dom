@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html style="toto">
+  <?pi a="foo"?>
+  <head><title>ab&amp;
+cd&amp;<!-- Some comment -->
+ef</title></head>
+<body>
+abc<em>def&amp;
+gh<![CDATA[something]]>a<em></em></em>
+</body>
+</html>

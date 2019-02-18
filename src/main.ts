@@ -514,8 +514,8 @@ export class Validator {
               [new ValidationError(`cannot resolve the name ${tagName}`)],
               parent, curElIndex);
             // This allows us to move forward. It will certainly cause a
-            // validation error, and send salve into its recovery mode for unknown
-            // elements.
+            // validation error, and send salve into its recovery mode for
+            // unknown elements.
             ename = new EName("", tagName);
           }
 
@@ -574,9 +574,10 @@ export class Validator {
           while (node !== null) {
             switch (node.nodeType) {
               case Node.TEXT_NODE:
-                // Salve does not allow multiple text events in a row. If text is
-                // encountered, then all the text must be passed to salve as a
-                // single event. We record the text and will flush it to salve
+              case Node.CDATA_SECTION_NODE:
+                // Salve does not allow multiple text events in a row. If text
+                // is encountered, then all the text must be passed to salve as
+                // a single event. We record the text and will flush it to salve
                 // later.
                 textAccumulator += (node as Text).data;
                 if (textAccumulatorNode === undefined) {
@@ -590,9 +591,13 @@ export class Validator {
                 stage = this._validationStage = Stage.START_TAG;
                 this._previousChild = null;
                 continue stage_change;
+              case Node.DOCUMENT_TYPE_NODE:
               case Node.COMMENT_NODE:
-                break; // We just skip over comment nodes.
+              case Node.PROCESSING_INSTRUCTION_NODE:
+                break; // We just skip over these.
               default:
+                // Document and document fragment nodes would end up here.  Yep,
+                // if we run into these nodes, that's a problem.
                 throw new Error(`unexpected node type: ${node.nodeType}`);
             }
             node = node.nextSibling;
@@ -1087,36 +1092,47 @@ export class Validator {
         dataKey = "EventIndexBeforeAttributes";
       }
       else {
-        switch (container.nodeType) {
+        switch (toInspect.nodeType) {
+          case Node.COMMENT_NODE:
+          case Node.PROCESSING_INSTRUCTION_NODE:
           case Node.TEXT_NODE:
-            toInspect = (container as any).previousElementSibling;
-            if (toInspect === null) {
+          case Node.CDATA_SECTION_NODE: {
+            // This has for effect to position ourselves before all immediately
+            // adjacent sequences of text-like or irrelevant nodes.
+            const prev = (toInspect as Text).previousElementSibling;
+            if (prev === null) {
               // tslint:disable-next-line:no-non-null-assertion
-              toInspect = container.parentNode!;
+              toInspect = toInspect.parentNode!;
               dataKey = "EventIndexAfterStart";
             }
+            else {
+              toInspect = prev;
+            }
             break;
+          }
           case Node.ELEMENT_NODE:
           case Node.DOCUMENT_FRAGMENT_NODE:
-          case Node.DOCUMENT_NODE:
-            const node = container.childNodes[index];
-
-            const prev = node === undefined ?
-              (container as Element).lastElementChild :
-              // It may not be an element, in which case we get "undefined".
-              (node as Element).previousElementSibling;
-
+          case Node.DOCUMENT_NODE: {
+            const node = toInspect.childNodes[index];
             if (attributes) {
               dataKey = "EventIndexAfterAttributes";
               toInspect = node;
             }
-            else if (prev !== null) {
-              toInspect = prev;
-            }
             else {
-              dataKey = "EventIndexAfterStart";
+              const prev = node === undefined ?
+                (toInspect as Element).lastElementChild :
+                // It may not be an element, in which case we get "undefined".
+                (node as Element).previousElementSibling;
+
+              if (prev !== null) {
+                toInspect = prev;
+              }
+              else {
+                dataKey = "EventIndexAfterStart";
+              }
             }
             break;
+          }
           default:
             throw new Error(`unexpected node type: ${container.nodeType}`);
         }
@@ -1210,6 +1226,9 @@ export class Validator {
     }
     else {
       switch (container.nodeType) {
+        case Node.PROCESSING_INSTRUCTION_NODE:
+        case Node.COMMENT_NODE:
+        case Node.CDATA_SECTION_NODE:
         case Node.TEXT_NODE: {
           const prev = (container as Text).previousElementSibling;
           let getFrom;
@@ -1229,12 +1248,13 @@ export class Validator {
           // We will attempt to fire a text event if our location is inside the
           // current text node.
           //
-          // A previous version of this code was also checking whether there is a
-          // text node between this text node and prev but this cannot happen
+          // A previous version of this code was also checking whether there is
+          // a text node between this text node and prev but this cannot happen
           // because the tree on which validation is performed cannot have two
-          // adjacent text nodes. It was also checking whether there was a _text
-          // element between prev and this text node but this also cannot happen.
-          if (index > 0) {
+          // adjacent text nodes.
+          if ((container.nodeType === Node.TEXT_NODE ||
+               container.nodeType === Node.CDATA_SECTION_NODE) &&
+              index > 0) {
             walker = walker.clone();
             fireTextEvent(container as Text);
           }
@@ -1248,7 +1268,8 @@ export class Validator {
           let getFrom;
           let propName: CustomNodeProperty;
           if (!attributes) {
-            prev = node === undefined ? (container as Element).lastElementChild :
+            prev = node === undefined ?
+              (container as Element).lastElementChild :
               (node as Element).previousElementSibling;
 
             if (prev !== null) {
@@ -1269,13 +1290,14 @@ export class Validator {
           walker = this.readyWalker(this.getNodeProperty(getFrom, propName)!);
 
           if (!attributes) {
-            // We will attempt to fire a text event if another text node appeared
-            // between the node we care about and the element just before it.
+            // We will attempt to fire a text event if another text node
+            // appeared between the node we care about and the element just
+            // before it.
             const prevSibling = node != null ? node.previousSibling : null;
             if (prevSibling !== null &&
                 // If the previous sibling is the same as the previous *element*
-                // sibbling, then there is nothing *between* that we need to take
-                // care of.
+                // sibbling, then there is nothing *between* that we need to
+                // take care of.
                 prevSibling !== prev) {
               if (prevSibling.nodeType === Node.TEXT_NODE) {
                 walker = walker.clone();
