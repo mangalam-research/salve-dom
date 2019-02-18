@@ -80,7 +80,7 @@
     "webpack-cli": "^3.2.3"
   },
   "dependencies": {
-    "salve": "^9.0.1"
+    "salve": "^9.1.1"
   },
   "husky": {
     "hooks": {
