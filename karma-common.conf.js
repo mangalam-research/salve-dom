@@ -3,7 +3,7 @@
 module.exports = (config) => {
   const options = {
     basePath: ".",
-    frameworks: ["mocha", "chai"],
+    frameworks: ["mocha", "chai", "source-map-support"],
     client: {
       mocha: {
         grep: config.grep,
@@ -42,6 +42,9 @@ module.exports = (config) => {
       },
     },
     reporters: ["mocha"],
+    mochaReporter: {
+      showDiff: true,
+    },
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
