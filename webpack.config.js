@@ -18,7 +18,7 @@ module.exports = {
   output: {
     path: `${__dirname}/build/dist`,
     filename: "[name].js",
-    sourceMapFilename: "[name].map.js",
+    sourceMapFilename: "[name].js.map",
     library: "salve-dom",
     libraryTarget: "umd",
   },
