@@ -50,8 +50,8 @@ function onCompletion(p: Validator, cb: () => void): void {
 const verbose = false;
 
 function sameEvents(evs: EventSet, expected: Event[]): void {
-  expect(Array.from(evs).map((x) => x.toString())).to.have
-    .members(expected.map((x) => x.toString()));
+  expect(Array.from(evs).map(x => x.toString())).to.have
+    .members(expected.map(x => x.toString()));
 }
 
 describe("Validator", () => {
@@ -81,13 +81,13 @@ describe("Validator", () => {
          .then(readTreeFromJSON),
        util.fetchText(
          testFile("multiple_namespaces_on_same_node_converted.xml"))
-         .then((text) => parser.parse(text)),
+         .then(text => parser.parse(text)),
        util.fetchText(testFile("percent_to_parse_converted.xml"))
-         .then((text) => parser.parse(text)),
+         .then(text => parser.parse(text)),
        util.fetchText(testFile("to_parse_converted.xml"))
-         .then((text) => parser.parse(text)),
+         .then(text => parser.parse(text)),
        util.fetchText(testFile("more_node_types_converted.xml"))
-         .then((text) => parser.parse(text)),
+         .then(text => parser.parse(text)),
      ]));
   });
 
@@ -111,7 +111,7 @@ describe("Validator", () => {
       });
     }
 
-    it("with an empty document", (done) => {
+    it("with an empty document", done => {
       const p = makeValidator(emptyTree);
 
       onCompletion(p, () => {
@@ -126,7 +126,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("runs _runDocumentValidation", (done) => {
+    it("runs _runDocumentValidation", done => {
       const p = new CustomValidator(grammar, emptyTree, {
         maxTimespan: 0,
       });
@@ -139,7 +139,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("emits error event", (done) => {
+    it("emits error event", done => {
       const p = makeValidator(emptyTree);
 
       // Manipulate stop so that we know when the work is done.
@@ -153,7 +153,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("allows listening to *", (done) => {
+    it("allows listening to *", done => {
       const p = makeValidator(emptyTree);
 
       // Manipulate stop so that we know when the work is done.
@@ -164,7 +164,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("with actual contents", (done) => {
+    it("with actual contents", done => {
       const p = makeValidator(genericTree.cloneNode(true) as Document);
 
       onCompletion(p, () => {
@@ -176,7 +176,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("with all node types", (done) => {
+    it("with all node types", done => {
       const p = makeValidator(moreNodeTypes.cloneNode(true) as Document);
 
       onCompletion(p, () => {
@@ -190,7 +190,7 @@ describe("Validator", () => {
 
     // This test was added in response to a bug that surfaced when
     // wed moved from HTML to XML for the data tree.
-    it("with two namespaces on the same node", (done) => {
+    it("with two namespaces on the same node", done => {
       const tree = multipleNamespacesTree.cloneNode(true);
       const p = new Validator(teiSchemaGrammar, tree as Document, {
         maxTimespan: 0, // Work forever.
@@ -250,7 +250,7 @@ describe("Validator", () => {
       assert.equal(p.errors.length, 0);
     });
 
-    it("restart at", (done) => {
+    it("restart at", done => {
       const tree = genericTree.cloneNode(true) as Document;
       const p = makeValidator(tree);
       let first = true;
@@ -270,7 +270,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("restart at triggers reset-errors event", (done) => {
+    it("restart at triggers reset-errors event", done => {
       const tree = genericTree.cloneNode(true) as Document;
       const p = makeValidator(tree);
 
@@ -301,7 +301,7 @@ describe("Validator", () => {
     // This test was added to handle problem with the internal state of the
     // validator.
     //
-    it("restart at and getErrorsFor", (done) => {
+    it("restart at and getErrorsFor", done => {
       const tree = genericTree.cloneNode(true) as Document;
       const p = makeValidator(tree);
       let times = 0;
@@ -342,7 +342,7 @@ describe("Validator", () => {
       });
     }
 
-    it("emits correct possible-due-to-wildcard-change events", (done) => {
+    it("emits correct possible-due-to-wildcard-change events", done => {
       // Manipulate stop so that we know when the work is done.
       const p = makeValidator();
       let count = 0;
@@ -376,7 +376,7 @@ describe("Validator", () => {
       p.start();
     });
 
-    it("uses the prefix option", (done) => {
+    it("uses the prefix option", done => {
       // Manipulate stop so that we know when the work is done.
       const p = makeValidator("myprefix");
       let count = 0;
@@ -418,7 +418,7 @@ describe("Validator", () => {
       });
     }
 
-    makeTest("empty document, at root", (p) => {
+    makeTest("empty document, at root", p => {
       const evs = p.possibleAt(emptyTree, 0);
       sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
     },
@@ -756,7 +756,7 @@ describe("Validator", () => {
       before(() => util
              .fetchText(
                testFile("multiple_namespaces_on_same_node_converted.xml"))
-             .then((text) => defaultTree = parser.parse(text)));
+             .then(text => defaultTree = parser.parse(text)));
 
       // tslint:disable-next-line:no-shadowed-variable
       function makeTest(name: string,
@@ -793,7 +793,7 @@ describe("Validator", () => {
     describe("caches", () => {
       let dataTree: Document;
       before(() => util.fetchText(testFile("caching_to_parse_converted.xml"))
-             .then((text) => {
+             .then(text => {
                dataTree = parser.parse(text);
              }));
 
@@ -899,7 +899,7 @@ describe("Validator", () => {
     function makeTest(name: string,
                       stopFn: (p: Validator, tree: Document | Element) => void):
     void {
-      it(name, (done) => {
+      it(name, done => {
         const tree = genericTree.cloneNode(true) as Document;
         const p = new Validator(grammar, tree, {
           maxTimespan: 0,
@@ -1083,7 +1083,7 @@ describe("Validator", () => {
     const toParseStack: string[] = [];
     beforeEach(
       () => util.fetchText(toParseStack[0])
-        .then((data) => {
+        .then(data => {
           tree = parser.parse(data);
           p = new Validator(grammar, tree, {
             maxTimespan: 0, // Work forever.
@@ -1121,7 +1121,7 @@ describe("Validator", () => {
         assert.deepEqual(p.getDocumentNamespaces(), {
           // tslint:disable-next-line: no-http-string
           "": ["http://www.tei-c.org/ns/1.0"],
-          x: ["uri:x", "uri:x2"],
+          "x": ["uri:x", "uri:x2"],
         });
       });
     });
@@ -1131,7 +1131,7 @@ describe("Validator", () => {
     function makeTest(name: string,
                       preFn: undefined | ((tree: Document) => void),
                       stopFn: (p: Validator, tree: Document) => void): void {
-      it(name, (done) => {
+      it(name, done => {
         const tree = genericTree.cloneNode(true) as Document;
         if (preFn !== undefined) {
           preFn(tree);
@@ -1148,16 +1148,15 @@ describe("Validator", () => {
       });
     }
 
-    makeTest("with actual contents, no errors", undefined,
-             (p, tree) => {
-               assert.equal(p.errors.length, 0, "no errors");
-               assert.sameMembers(
-                 p.getErrorsFor(tree.getElementsByTagName("em")[0]),
-                 []);
-             });
+    makeTest("with actual contents, no errors", undefined, (p, tree) => {
+      assert.equal(p.errors.length, 0, "no errors");
+      assert.sameMembers(
+        p.getErrorsFor(tree.getElementsByTagName("em")[0]),
+        []);
+    });
 
     makeTest("with actual contents, errors in the tag examined",
-             (tree) => {
+             tree => {
                const el = tree.getElementsByTagName("em")[0];
                el.appendChild(el.ownerDocument!.createElement("foo"));
              },
@@ -1171,7 +1170,7 @@ describe("Validator", () => {
              });
 
     makeTest("with actual contents, errors but not in the tag examined",
-             (tree) => {
+             tree => {
                const el = tree.getElementsByTagName("em")[0];
                el.appendChild(el.ownerDocument!.createElement("foo"));
              },
@@ -1187,7 +1186,7 @@ describe("Validator", () => {
     let tree: Document;
     before(
       () => util.fetchText(testFile("resolve_unresolve_names_converted.xml"))
-        .then((data) => {
+        .then(data => {
           tree = parser.parse(data);
           p = new Validator(grammar, tree, {
             maxTimespan: 0, // Work forever.

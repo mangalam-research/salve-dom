@@ -859,7 +859,7 @@ export class Validator {
                               node?: Node | null,
                               index?: number): void {
     for (const result of results) {
-      this._processError({ error: result, node: node, index: index });
+      this._processError({ error: result, node, index });
     }
   }
 

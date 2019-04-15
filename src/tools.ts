@@ -7,8 +7,9 @@
  *
  * See https://github.com/Microsoft/TypeScript/issues/12123.
  */
+// tslint:disable-next-line:ban-types
 export function fixPrototype(obj: any, parent: Function): void {
-  const oldProto: Function = Object.getPrototypeOf !== undefined ?
+  const oldProto = Object.getPrototypeOf !== undefined ?
     Object.getPrototypeOf(obj) :
     obj.__proto__;
 

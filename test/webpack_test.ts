@@ -39,9 +39,9 @@ describe("Webpack test", () => {
 
     return Promise.all([
       util.fetchText("test/schemas/simplified-rng.js")
-        .then((text) => grammar = salve.readTreeFromJSON(text)),
+        .then(text => grammar = salve.readTreeFromJSON(text)),
       util.fetchText(testFile("to_parse_converted.xml"))
-        .then((text) => genericTree = parser.parse(text)),
+        .then(text => genericTree = parser.parse(text)),
     ]);
   });
 
@@ -51,7 +51,7 @@ describe("Webpack test", () => {
     });
   }
 
-  it("with actual contents", (done) => {
+  it("with actual contents", done => {
     const p = makeValidator(genericTree.cloneNode(true) as Document);
 
     // Manipulate stop so that we know when the work is done.
