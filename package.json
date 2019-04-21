@@ -79,7 +79,7 @@
     "typescript": "^3.4.4",
     "versync": "^4.1.0",
     "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.0"
+    "webpack-cli": "^3.3.1"
   },
   "dependencies": {
     "salve": "^9.1.1"
