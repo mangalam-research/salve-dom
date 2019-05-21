@@ -206,7 +206,7 @@ export interface Options {
 
 interface EventRecord {
   name: string;
-  params: string[];
+  params: any[];
 }
 
 /**
@@ -619,8 +619,7 @@ export class Validator {
           this._fireAndProcessEvent(walker,
                                     "endTag", [ename.ns, ename.name],
                                     curEl, curEl.childNodes.length);
-          this._fireAndProcessEvent(walker, "leaveContext", [],
-                                    curEl, curEl.childNodes.length);
+          this._leaveContext(walker);
 
           // Go back to the parent
           this._previousChild = curEl;
@@ -912,8 +911,8 @@ export class Validator {
 
   private _fireContextEvents(walker: GrammarWalker<DefaultNameResolver>,
                              el: Element): void {
-    this._fireAndProcessEvent(walker, "enterContext", [], el, 0);
     const attrIxLim = el.attributes.length;
+    const mapping: Record<string, string> = Object.create(null);
     for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
       const attr = el.attributes[attrIx];
       let uri: string | undefined;
@@ -925,10 +924,10 @@ export class Validator {
       }
 
       if (uri !== undefined) {
-        this._fireAndProcessEvent(walker, "definePrefix", [uri, attr.value],
-                                  el, 0);
+        mapping[uri] = attr.value;
       }
     }
+    this._enterContextWithMapping(walker, mapping);
   }
 
   /**
@@ -978,6 +977,18 @@ export class Validator {
     return true;
   }
 
+  private _enterContextWithMapping(walker: GrammarWalker<DefaultNameResolver>,
+                                   mapping: Record<string, string>): void {
+    this._validationEvents.push({ name: "enterContextWithMapping",
+                                  params: [mapping] });
+    walker.nameResolver.enterContextWithMapping(mapping);
+  }
+
+  private _leaveContext(walker: GrammarWalker<DefaultNameResolver>): void {
+    this._validationEvents.push({ name: "leaveContext", params: [] });
+    walker.nameResolver.leaveContext();
+  }
+
   /**
    * Convenience method to fire events.
    *
@@ -1000,28 +1011,13 @@ export class Validator {
                                el?: Node | null,
                                ix?: number): void {
     this._validationEvents.push({ name, params });
-    switch (name) {
-      case "enterContext":
-        walker.nameResolver.enterContext();
-
-        return;
-      case "leaveContext":
-        walker.nameResolver.leaveContext();
-
-        return;
-      case "definePrefix":
-        walker.nameResolver.definePrefix(params[0], params[1]);
-
-        return;
-      default:
-        const eventResult = walker.fireEvent(name, params);
-        if (eventResult instanceof Array) {
-          if (el != null && ix !== undefined && typeof ix !== "number") {
-            // tslint:disable-next-line:no-parameter-reassignment
-            ix = _indexOf(el.childNodes, ix);
-          }
-          this._processEventResult(eventResult, el, ix);
-        }
+    const eventResult = walker.fireEvent(name, params);
+    if (eventResult instanceof Array) {
+      if (el != null && ix !== undefined && typeof ix !== "number") {
+        // tslint:disable-next-line:no-parameter-reassignment
+        ix = _indexOf(el.childNodes, ix);
+      }
+      this._processEventResult(eventResult, el, ix);
     }
   }
 
@@ -1381,14 +1377,11 @@ export class Validator {
     for (let ix = searchIx; ix < eventIndex; ++ix) {
       const { name, params } = this._validationEvents[ix];
       switch (name) {
-        case "enterContext":
-          walker.nameResolver.enterContext();
+        case "enterContextWithMapping":
+          walker.nameResolver.enterContextWithMapping(params[0]);
           break;
         case "leaveContext":
           walker.nameResolver.leaveContext();
-          break;
-        case "definePrefix":
-          walker.nameResolver.definePrefix(params[0], params[1]);
           break;
         default:
           walker.fireEvent(name, params);
