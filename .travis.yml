@@ -1,5 +1,3 @@
-dist: trusty
-sudo: required
 language: node_js
 # We purposely do not use a list like this to avoid maintaining version numbers
 # in multiple places. In particular, we don't want to have to update the latest
@@ -25,18 +23,4 @@ addons:
       secure: JRAxx+LH8rdxy2435e08Yt1AfOperA5t7d4KVXTeSW7wTm7p9L6ha2I6CDuNFoSK0F9goIJKbKQM+YlMD2JhuBKnehrRGacwtA3eKgAYvOc2wXApjVyanYmZqdMIs+falswvraF289jn+Mbm9tzmR2WWaT/EBLyfjWizWTTiCiasGsOjemosao/Wv3mAslm2lcjcgIjYHqLPUuHv6HMefARbLc0ylA5G0LQGs2vL9w3KVs8Qgyn0ZecCLnnszXo/VDz28eZqEa4JCF/zzAU+2XdNZDi/jBwgg5/KJGbMomyWRAKAayNlYzVszyU4qf2ucaiXdjhWJ4xz9nzEzneojyvgbQc6NIthaoMDF41qvLCOgKqOnHvJxhUM832Qne+/Cm5DXDZqbRE35j5ms0XMnbtfSeEAHPDfHoiYcy6k3W7N6pnAWEms3maEwYjePI/npgDDw3egeX4azvvin0SKXLTf66bia6GO3WGNM24T0K7WYOZGGlyY0AuDLrrHL49uFVJMzoIRjYyw6r5IZn5TemU+V7BcNQjo64fA86k+aizR6Vbzclo69Si/JDZ3FfqqSUBKvdWjXxNcNBSwhsWUyDvQhxB6Y5h39sWs41dl8/hQ9RtKae/kUWbG6A3i7qAB+jMN6k8CrSna5uh0tIhWi9n1EeX384h3IB9yFFuIXJE=
     access_key:
       secure: ZdntyW1sMi8GTazydSqTtowjt6bHIrwYjUqqJDTkkiUlDWuj96yrmAzNVSbYUEfdTJ9181HtyDUwC20hVh1rX5CxrdIDrEBKd3FeRzO22CNNOQZFjz6p6C03Sp580CHa/z2CD+QgWkajorEJ/HRBGTvvxN7VtOe85+qOiYhst1yd7oG07hc38/1nvUGhbKuuZ+G8+d9YnE6v4qsLRmT9J2yKuxd893qzPZI+f4qHlApD2kcU8mC/KEtFW99UgSmYGOLJV6dDSSkWInjJ8VzHqWzNhDE9dXAWvULXTEwc4wa1X8Jyo34sxetaALw3zotSK8iOepUcyFzq0rxYavxb2lOCB4fUHTLVQ6IYQoi62A2Rb1w8NLWGTD2hnB635ZynNfcIq1zl5ARvAcYaPwKJhIIc++tifScWdtIpYb8lzgCRnUkOXczR7ahxgI8eIG0Clo3s7ORvVPmH1GOOyD9i43Dkd7XF21C4iqeK5F/QQeAqjEbpr9fOCdNslL6DIil20JbtoCG4NmwVLTWTFIjbqKDfJHP7ei2DhXYA5XHv57fBWcs2z3zxCIh/cT5qc4UDr9scjv72wXOeuHAbg7OlgF788/HvU0g1xg90DoMU91wan34FkUbbSwI7jZxdzTWjtGQMZ5jmXnVM1Z/DTZ9kGmOLVHzKqeA9RXLHfwI1AEw=
-before_install:
-- sudo apt-get update -qq
-# We need at least npm 6
-- '[[ $(npm -v) =~ ^[6-9].*$ ]] || npm install -g npm@latest'
-- npm install -g greenkeeper-lockfile@2
-# We need this to work around this:
-# https://github.com/greenkeeperio/greenkeeper-lockfile/issues/156
-install: 'if [[ $TRAVIS_BRANCH = greenkeeper/* ]]; then npm install; else npm ci; fi'
 script: npm run test ${ALL_BROWSERS+--browsers=all} && npm run lint
-before_script: greenkeeper-lockfile-update
-after_script: greenkeeper-lockfile-upload
-env:
-  global:
-  # For Greenkeeper.
-  - secure: JaJo2I1hqYOleEZPT4r37rwasIPxnEOAnnUEs2Jq0BPZxcZ6ognqd8Vumiyh5C5XNnBTY5RGePED8BtxRNMnyutzYmM4HLJLInMdq4bQqAGffwaIiQ+F2HSpAkgZfqVdiiUotVzfNRArV7/35SgCNXbKh7zbIsQ6YNtnypVAYRP34Imk9n9jaLmyMdiX860D2homIAYoX71IVVvi1zL+4zI/oY29zWLZNHt2SusfwOu1fw5ahJLdQ3keMFzls3l8Rehd46sMIgvQOTk6JtpY9WA97TsCJPm7LJ/Dk83V3hf9g7TACM7175PW1H4TfsaxX4VQuFrtk4rfZOXpklj5T7jpdrIq2lW64xjlXAV0G5F2IK5d0BcYsXjHVM4IGeu8uSChCDXa+UG6XzVR7JNKu6nRnW5CrxOlHlKZ+etoN8WADdT4oFWXvsXsAdY8PFTUR4pMv8VZFkMKDsm2ZdnTJGLPbp6Mh0QqVGYee1m2knIGqpaRPol9lOTDcLEjz0Kl8Q/kthYXTyTuYDRSj8LaH7zuDd+v0LjiNZV7tB4yZXlFpppi1VKkfiRN9Zwb2Fawe9LoZT9Yq9rIkErDmUtu5x5393RwBEP/7+3XhIHXAsLK68/w398vhXNkyqsboCixJqgV9AgOaSPYZxZzk9oQMBKnEr4n36oyyLS7u2fWQNo=
