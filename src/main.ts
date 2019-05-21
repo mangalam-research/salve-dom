@@ -285,10 +285,9 @@ export class Validator {
     }
 
     this._curEl = this.root;
-    // This prevents an infinite loop when speculativelyValidate is called to
-    // validate a text node.
-    this._setNodeProperty(this._curEl, "EventIndexAfterStart",
-                          this._validationEvents.length);
+    // This prevents infinite loops with possibleAt and speculativelyValidate
+    // when the logic needs to back out to the top node.
+    this._setNodeProperty(this._curEl, "EventIndexAfterStart", 0);
     this._setWorkingState(WorkingState.INCOMPLETE, 0);
     this._validationWalker = this.schema.newWalker(new DefaultNameResolver());
     this.events = this._events;
@@ -754,6 +753,9 @@ export class Validator {
     this._previousChild = null;
     this._validationWalker = this.schema.newWalker(new DefaultNameResolver());
     this._validationEvents = [];
+    // This prevents infinite loops with possibleAt and speculativelyValidate
+    // when the logic needs to back out to the top node.
+    this._setNodeProperty(this._curEl, "EventIndexAfterStart", 0);
     this._curEl = this.root;
     this._partDone = 0;
     this._errors = [];

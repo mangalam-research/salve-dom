@@ -64,6 +64,7 @@ describe("Validator", () => {
   let multipleNamespacesTree: Document;
   let percentToParseTree: Document;
   let moreNodeTypes: Document;
+  let piFirst: Document;
 
   before(async function before(): Promise<void> {
     // We have a high timeout here because IE11 on Browser Stack often takes
@@ -74,7 +75,7 @@ describe("Validator", () => {
     emptyTree = util.getEmptyTree();
 
     ([grammar, teiSchemaGrammar, multipleNamespacesTree, percentToParseTree,
-      genericTree, moreNodeTypes] =
+      genericTree, moreNodeTypes, piFirst] =
      await Promise.all([
        util.fetchText("test/schemas/simplified-rng.js").then(readTreeFromJSON),
        util.fetchText("test/schemas/tei-simplified-rng.js")
@@ -87,6 +88,8 @@ describe("Validator", () => {
        util.fetchText(testFile("to_parse_converted.xml"))
          .then(text => parser.parse(text)),
        util.fetchText(testFile("more_node_types_converted.xml"))
+         .then(text => parser.parse(text)),
+       util.fetchText(testFile("pi_first_converted.xml"))
          .then(text => parser.parse(text)),
      ]));
   });
@@ -509,6 +512,17 @@ describe("Validator", () => {
                                  true);
         sameEvents(evs, [new LeaveStartTagEvent()]);
       });
+
+      // This test was added because there was a bug whereby the reset would not
+      // completely reset the state, and prevent possibleAt from working.
+      makeTest("works after a reset", (p, tree) => {
+        const pi = tree.firstChild!;
+        expect(pi).to.have.property("nodeType")
+          .equal(Node.PROCESSING_INSTRUCTION_NODE);
+        p.resetTo(tree);
+        const evs = p.possibleAt(pi, 0);
+        sameEvents(evs, [new EnterStartTagEvent(new Name("", "", "html"))]);
+      }, () => piFirst);
     });
 
     describe("with various node types", () => {
