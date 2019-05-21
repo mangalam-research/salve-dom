@@ -114,13 +114,17 @@ function isPossibleDueToWildcard(walker: GrammarWalker<DefaultNameResolver>,
     }
     const { namePattern } = ev;
     if (namePattern.match(ns, name)) {
-      // We already know that it matches, and this is not merely due to a
-      // wildcard.
+      // The ``.match`` test above will return true irrespective of why the
+      // namePattern matches. It could match due to a wildcard, or something
+      // else. The following ``.wildcardMatch`` test returns true only if the
+      // pattern matches due to a wildcard.
       if (!namePattern.wildcardMatch(ns, name)) {
+        // We already know that it matches, due to *something else* than a
+        // wildcard. So we know the overall result.
         return false;
       }
 
-      // Keep track of whether it ever matched anything.
+      // Keep track of whether it ever matched a wildcard.
       matched = true;
     }
   }
