@@ -1,5 +1,3 @@
-[![Greenkeeper badge](https://badges.greenkeeper.io/mangalam-research/salve-dom.svg)](https://greenkeeper.io/)
-
 salve-dom is a library able to validate XML documents stored in DOM trees
 according to a Relax NG schema. It uses
 [salve](https://github.com/mangalam-research/salve) to perform the validation
