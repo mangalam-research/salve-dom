@@ -1008,15 +1008,11 @@ export class Validator {
   private _fireAndProcessEvent(walker: GrammarWalker<DefaultNameResolver>,
                                name: string,
                                params: string[],
-                               el?: Node | null,
-                               ix?: number): void {
+                               el: Node | null,
+                               ix: number): void {
     this._validationEvents.push({ name, params });
     const eventResult = walker.fireEvent(name, params);
     if (eventResult instanceof Array) {
-      if (el != null && ix !== undefined && typeof ix !== "number") {
-        // tslint:disable-next-line:no-parameter-reassignment
-        ix = _indexOf(el.childNodes, ix);
-      }
       this._processEventResult(eventResult, el, ix);
     }
   }
