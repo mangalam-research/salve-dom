@@ -27,7 +27,6 @@ addons:
       secure: ZdntyW1sMi8GTazydSqTtowjt6bHIrwYjUqqJDTkkiUlDWuj96yrmAzNVSbYUEfdTJ9181HtyDUwC20hVh1rX5CxrdIDrEBKd3FeRzO22CNNOQZFjz6p6C03Sp580CHa/z2CD+QgWkajorEJ/HRBGTvvxN7VtOe85+qOiYhst1yd7oG07hc38/1nvUGhbKuuZ+G8+d9YnE6v4qsLRmT9J2yKuxd893qzPZI+f4qHlApD2kcU8mC/KEtFW99UgSmYGOLJV6dDSSkWInjJ8VzHqWzNhDE9dXAWvULXTEwc4wa1X8Jyo34sxetaALw3zotSK8iOepUcyFzq0rxYavxb2lOCB4fUHTLVQ6IYQoi62A2Rb1w8NLWGTD2hnB635ZynNfcIq1zl5ARvAcYaPwKJhIIc++tifScWdtIpYb8lzgCRnUkOXczR7ahxgI8eIG0Clo3s7ORvVPmH1GOOyD9i43Dkd7XF21C4iqeK5F/QQeAqjEbpr9fOCdNslL6DIil20JbtoCG4NmwVLTWTFIjbqKDfJHP7ei2DhXYA5XHv57fBWcs2z3zxCIh/cT5qc4UDr9scjv72wXOeuHAbg7OlgF788/HvU0g1xg90DoMU91wan34FkUbbSwI7jZxdzTWjtGQMZ5jmXnVM1Z/DTZ9kGmOLVHzKqeA9RXLHfwI1AEw=
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install -y xsltproc
 # We need at least npm 6
 - '[[ $(npm -v) =~ ^[6-9].*$ ]] || npm install -g npm@latest'
 - npm install -g greenkeeper-lockfile@2
