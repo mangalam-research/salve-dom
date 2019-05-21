@@ -384,16 +384,14 @@ export class Validator {
         }
       }
 
-      let child: Node | null = node.firstChild;
+      let child: Element | null = node.firstElementChild;
       while (child !== null) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          _process(child as Element);
-        }
-        child = child.nextSibling;
+        _process(child);
+        child = child.nextElementSibling;
       }
     }
 
-    _process(this.root.firstChild as Element);
+    _process(this.root.firstElementChild);
 
     return ret;
   }
