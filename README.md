@@ -131,6 +131,11 @@ Two general options:
    format. This allows creating custom bundles (e.g. combine salve-dom and salve
    in a single bundle).
 
+Building
+========
+
+You need at least Node 10 to build it.
+
 Acknowledgments
 ===============
 

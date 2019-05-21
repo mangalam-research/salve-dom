@@ -1,19 +1,10 @@
 language: node_js
-# We purposely do not use a list like this to avoid maintaining version numbers
-# in multiple places. In particular, we don't want to have to update the latest
-# version of node we support in two places.
-#
-# Instead we use `matrix` and update the numbers only there.
-#
-# node_js:
-# - '10'
-# - '8'
 matrix:
   include:
   # Run ALL_BROWSERS only on the latest
-  - node_js: '10'
+  - node_js: '12'
     env: ALL_BROWSERS=true
-  - node_js: '8'
+  - node_js: '10'
 env:
   global:
     - secure: "oKXUyhL0xwyCVVJxc5rI4y964sFsywqh7w4Ek0mYRI+xxg2534WahukEaP8vPkUW+xLKOYrzbJ7Ooblbr4/R+Lq0l3Ld5I5tzj4siv5BgQsHqrLOXlqJ5LNMBeH6grJSe66eRxU3ARsQkobbv5zyuFgQmNlvBqCaJ0eMLBz4k1BoeaReuNU6pl+Y1IomaAzb5OgrgRw0JXlGCkz4hEzvvgVl6pvqPn188zu5JNu5Umlsd3m+VJB2CL4jSyQwPhO5fZLGeCp9HGUNLN62kmbmMSm+pFP2iUlqxI14CWxrmnk8BC9dekEU4It6yIwfDyt1RPdxYD67VoFi6g2SfK5rp46j38YV3mZMdRnm6mw4q1I/OZEo0nmpyQnZzW2AwH7elc1bgyU9BGfL4JBem4A4ftUGGU5kocjSgRPu3tK4jIJzHThadjmtNc2j5nPkFEKDGc7Gyh1PlhWyImH7LvYpehhhbaBjb/x713VQzzzB4w+PyxvN02uvMsjhjqm+k45dcBtaBc9eW85f+I8uE/g9I/+XrM//p2G3STdsLuJHKhRNBzZwATwgWOEJYNdy8UO8cdu8u24g9Ig65HyhC01ZDfO97hmv/pfpc+T3JO8j2+pk2JbFIwBBjp/bUUBq1V+4kyDhOfWPlDjw7dn2gAfAssY97fFo3EUZC/wWxsfsRJg="
