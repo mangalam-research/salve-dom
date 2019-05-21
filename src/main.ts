@@ -264,10 +264,7 @@ export class Validator {
   constructor(private readonly schema: Grammar,
               private readonly root: Element | Document,
               options: Options = {}) {
-
-    const keys = ["timeout", "maxTimespan", "walkerCacheGap"] as
-    ["timeout", "maxTimespan", "walkerCacheGap"];
-    for (const key of keys) {
+    for (const key of ["timeout", "maxTimespan", "walkerCacheGap"] as const) {
       const value = options[key];
       if (value === undefined) {
         continue;
