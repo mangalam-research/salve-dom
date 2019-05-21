@@ -1,3 +1,13 @@
+<a name="6.0.1"></a>
+## [6.0.1](https://github.com/mangalam-research/salve-dom/compare/v6.0.0...v6.0.1) (2019-05-21)
+
+
+### Bug Fixes
+
+* an infinite loop could occur after a resetTo ([4d68423](https://github.com/mangalam-research/salve-dom/commit/4d68423))
+
+
+
 <a name="6.0.0"></a>
 # [6.0.0](https://github.com/mangalam-research/salve-dom/compare/v5.0.1...v6.0.0) (2019-02-18)
 
