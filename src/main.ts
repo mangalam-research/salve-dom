@@ -438,7 +438,7 @@ export class Validator {
    *
    * @throws {Error} When there is an internal error.
    */
-  // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
+  // tslint:disable-next-line:max-func-body-length
   private _cycle(): boolean {
     // If we got here after a reset, then we've finished resetting.  If we were
     // not resetting, then this is a noop.
@@ -485,24 +485,7 @@ export class Validator {
 
           // Handle namespace declarations. Yes, this must happen before we deal
           // with the tag name.
-          this._fireAndProcessEvent(walker, "enterContext", [], curEl, 0);
-          const attrIxLim = curEl.attributes.length;
-          for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
-            const attr = curEl.attributes[attrIx];
-            let uri: string | undefined;
-            if (attr.name === "xmlns") {
-              uri = "";
-            }
-            else if (attr.name.lastIndexOf("xmlns:", 0) === 0) {
-              uri = attr.name.slice(6);
-            }
-
-            if (uri !== undefined) {
-              this._fireAndProcessEvent(walker, "definePrefix",
-                                        [uri, attr.value], curEl, 0);
-            }
-          }
-
+          this._fireContextEvents(walker, curEl);
           const tagName = curEl.tagName;
           // tslint:disable-next-line:no-non-null-assertion
           const parent = curEl.parentNode!;
@@ -927,6 +910,27 @@ export class Validator {
     }
   }
 
+  private _fireContextEvents(walker: GrammarWalker<DefaultNameResolver>,
+                             el: Element): void {
+    this._fireAndProcessEvent(walker, "enterContext", [], el, 0);
+    const attrIxLim = el.attributes.length;
+    for (let attrIx = 0; attrIx < attrIxLim; ++attrIx) {
+      const attr = el.attributes[attrIx];
+      let uri: string | undefined;
+      if (attr.name === "xmlns") {
+        uri = "";
+      }
+      else if (attr.name.lastIndexOf("xmlns:", 0) === 0) {
+        uri = attr.name.slice(6);
+      }
+
+      if (uri !== undefined) {
+        this._fireAndProcessEvent(walker, "definePrefix", [uri, attr.value],
+                                  el, 0);
+      }
+    }
+  }
+
   /**
    * Fires all the attribute events for a given element.
    */
@@ -968,9 +972,8 @@ export class Validator {
     }
     this._setPossibleDueToWildcard(attr, walker, "attributeName",
                                    ename.ns, ename.name);
-    this._fireAndProcessEvent(
-      walker,
-      "attributeName", [ename.ns, ename.name], attr, 0);
+    this._fireAndProcessEvent(walker,
+                              "attributeName", [ename.ns, ename.name], attr, 0);
 
     return true;
   }
