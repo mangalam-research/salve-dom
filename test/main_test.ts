@@ -94,9 +94,7 @@ describe("Validator", () => {
      ]));
   });
 
-  const settings: (keyof Options)[] =
-    ["timeout", "maxTimespan", "walkerCacheGap"];
-  for (const setting of settings) {
+  for (const setting of ["timeout", "maxTimespan", "walkerCacheGap"] as const) {
     it(`fails when a ${setting} is less than 0`, () => {
       const options: Options = {};
       options[setting] = -1;
