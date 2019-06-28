@@ -55,7 +55,7 @@
     "conventional-changelog-cli": "^2.0.21",
     "eslint": "^5.16.0",
     "eslint-config-lddubeau-base": "^3.0.5",
-    "fs-extra": "^8.0.1",
+    "fs-extra": "^8.1.0",
     "glob": "^7.1.4",
     "husky": "^2.7.0",
     "jsdom": "^15.1.1",
