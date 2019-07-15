@@ -46,8 +46,8 @@
   },
   "homepage": "https://github.com/mangalam-research/salve-dom#readme",
   "devDependencies": {
-    "@commitlint/cli": "^8.0.0",
-    "@commitlint/config-angular": "^8.0.0",
+    "@commitlint/cli": "^8.1.0",
+    "@commitlint/config-angular": "^8.1.0",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.7",
     "@types/systemjs": "^0.20.6",
