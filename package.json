@@ -78,7 +78,7 @@
     "typescript": "^3.5.3",
     "versync": "^4.1.0",
     "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.6"
+    "webpack-cli": "^3.3.7"
   },
   "dependencies": {
     "salve": "^9.1.2"
