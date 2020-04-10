@@ -72,7 +72,7 @@
     "renovate-config-lddubeau": "^1.0.0",
     "systemjs": "^0.21.6",
     "systemjs-plugin-text": "0.0.11",
-    "tslint": "^5.20.1",
+    "tslint": "^6.1.1",
     "tslint-config-lddubeau": "^4.1.2",
     "typedoc": "^0.17.4",
     "typescript": "^3.8.3",
