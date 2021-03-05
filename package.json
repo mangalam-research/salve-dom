@@ -59,7 +59,7 @@
     "glob": "^7.1.6",
     "husky": "^3.1.0",
     "jsdom": "^15.2.1",
-    "karma": "^4.4.1",
+    "karma": "^5.0.0",
     "karma-browserstack-launcher": "^1.6.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
