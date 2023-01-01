@@ -77,8 +77,8 @@
     "typedoc": "^0.20.27",
     "typescript": "^3.9.9",
     "versync": "^5.0.0",
-    "webpack": "^4.46.0",
-    "webpack-cli": "^3.3.12"
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "dependencies": {
     "salve": "^9.1.2"
